@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id              String  @id @default(uuid())  // Unique ID
+  name            String  // Project Name
+  description     String? // Project Description (optional)
+  systemPrompt    String?  // System Prompt for the Project
+  isActive        Boolean @default(true) // Active status
+
+  posts           Post[] // Relation to Posts
+  categorys       Category[] // Relation to Category
+
+  createdAt       DateTime @default(now()) // Timestamp for creation
+  updatedAt       DateTime @updatedAt      // Auto-updated on modification
+}
+
+model Category{
+  id              String  @id @default(uuid())  // Unique ID
+  name            String  @unique // Category Name
+  slug            String  @unique // Category Slug
+  projectId       String  // Foreign key to Project
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  posts           Post[]  // Relation to Posts
+}
+
+model Post {
+  id          String   @id @default(uuid())  // Unique ID
+  title       String   @unique // Post title
+  slug        String   @unique// Category Slug
+  description String // Post description 
+  keywords    String // list of keywords
+  content     String   // Post content
+  thumbnail   String?  // Thumbnail image URL (optional)
+  isDraft     Boolean  @default(true)
+
+  categoryId  String   // Category of the post
+  category     Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  projectId   String   // Foreign key to Project
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  createdAt   DateTime @default(now()) // Timestamp for creation
+  updatedAt   DateTime @updatedAt      // Auto-updated on modification
+}
+

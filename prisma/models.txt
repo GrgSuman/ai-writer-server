@@ -1,0 +1,22 @@
+model User {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Authentication
+  email         String    @unique
+  password      String?   // Optional for social login
+  role          String  @default("USER")
+  emailVerified Boolean   @default(false)
+  
+  // Profile Information
+  firstName     String?
+  lastName      String?
+  profileImage  String?
+
+  // Social Auth
+  googleId     String?   @unique
+  facebookId   String?   @unique
+
+  @@map("users")
+}

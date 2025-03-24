@@ -4,9 +4,10 @@ import { webContents } from "./scraper/scraper";
 import cors from 'cors'
 import logger from 'morgan'
 import { postgptRoute } from "./features/postgpt/postgptRoute";
-import { projectRoute } from "./features/project/projectRoute";
+import { projectRoute } from "./features/projects/projectRoute";
 import { errorHandler } from "./middlewares/errorMiddleWare";
-import { postRoute } from "./features/posts/postRoutes";
+import  postRoute  from "./features/posts/postRoutes";
+import categoryRoute from "./features/categories/categoryRoute";
 
 
 dotenv.config();
@@ -21,11 +22,15 @@ app.use(cors({
 
 app.use(logger('dev'));
 
-//my api routes
-app.use("/api/postgpt", postgptRoute);
+// projects api routes
 app.use("/api/projects", projectRoute);
-app.use('/api/projects/:projectId', postRoute); // Posts under a specific project
+// categories api under project
+app.use("/api/projects/:projectId/categories", categoryRoute);
+// posts api routes under project
+app.use('/api/projects/:projectId/posts', postRoute); // Posts under a specific project
 
+// postgpt api routes
+app.use("/api/postgpt", postgptRoute);
 
 app.get("/", (req, res) => {
     res.json({

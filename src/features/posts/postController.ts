@@ -1,297 +1,185 @@
-import { NextFunction, Request, Response } from "express";
-import prisma from "../../lib/db";
-import { slugify } from "../../lib/slugify";
+import { Request, Response } from "express";
+import postService from "./postService";
+import expressAsyncHandler from "express-async-handler";
+import projectService from "../projects/projectService";
+import categoryService from "../categories/categoryService";
 
-export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
-    const { projectId } = req.params
-
-    try {
-        // Check if projectId exists
-        const categoriesByProject = await prisma.project.findUnique({
-            where: {
-                 id: projectId 
-            },
-            select: {
-                categorys: true
-            }
-        });
-
-        if (!categoriesByProject) {
-            res.status(400).json({
-                "success": false,
-                "message": `Project with ID ${projectId} not found`
-            });
-            return
-        }
-        res.json({
-            "success": true,
-            "message": "success",
-            "data": categoriesByProject
-        })
-    }
-    catch (e) {
-        next(e)
-    }
-
-}
-export const getSingleCategory = async (req: Request, res: Response) => {
-    const { categoryId } = req.params;
-    const categories = await prisma.category.findUnique({
-         where: { id: categoryId },
-         include:{
-            posts:true
-        }
-        })
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": categories
-    })
-}
-export const addNewCategory = async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * @route GET /api/projects/:projectId/posts
+ * @desc Get all posts in a project
+ * @access Public
+ */
+export const getAllPosts = expressAsyncHandler( async (req: Request, res: Response) => {
     const { projectId } = req.params;
-    const { name } = req.body;
-    if (!name) {
+    //check if projectId is valid
+    const project = await projectService.getSingleProjectById(projectId);
+    if (!project) {
         res.status(400).json({
             "success": false,
-            "message": "category name is required"
-        });
-        return
-    }
-    try {
-        // Check if projectId exists
-        const project = await prisma.project.findUnique({
-            where: { id: projectId }
-        });
-
-        if (!project) {
-            res.status(400).json({
-                "success": false,
-                "message": `Project with ID ${projectId} not found`
-            });
-            return
-        }
-
-        // Check if category already exists (case insensitive)
-        const existingCategory = await prisma.category.findUnique({ where: { name } });
-
-        if (existingCategory) {
-            console.log('Category already exists');
-            throw new Error('Category already exists');
-        }
-
-        const newCategory = await prisma.category.create({
-            data: {
-                name,
-                slug: slugify(name),
-                projectId
-            }
-        });
-
-        res.json({
-            "success": true,
-            "message": "success",
-            "data": newCategory
+            "message": `Project with ID ${projectId} not found`
         })
-
-    } catch (error) {
-        next(error)
+        return;
     }
-
-}
-export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
-    const { projectId, categoryId } = req.params;
-    const { name } = req.body;
-
-    if (!name) {
-        res.status(400).json({
-            "success": false,
-            "message": "Category name is required"
-        });
-        return
-    }
-
-    try {
-        // Check if projectId exists
-        const project = await prisma.project.findUnique({
-            where: { id: projectId }
-        });
-
-        if (!project) {
-            res.status(400).json({
-                "success": false,
-                "message": `Project with ID ${projectId} not found`
-            });
-            return
-        }
-
-        // Check if category exists
-        const existingCategory = await prisma.category.findUnique({
-            where: { id: categoryId }
-        });
-
-        if (!existingCategory) {
-            res.status(404).json({
-                "success": false,
-                "message": `Category with ID ${categoryId} not found`
-            });
-            return
-        }
-
-        // Update the category
-        const updatedCategory = await prisma.category.update({
-            where: { id: categoryId },
-            data: {
-                name,
-                slug: slugify(name), // Re-generate the slug
-                projectId
-            }
-        });
-
-        res.json({
-            "success": true,
-            "message": "Category updated successfully",
-            "data": updatedCategory
-        });
-
-    } catch (error) {
-        next(error); // Pass error to global error handler
-    }
-};
-export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
-    const { projectId, categoryId } = req.params;
-    try {
-        // Check if projectId exists
-        const project = await prisma.project.findUnique({
-            where: { id: projectId }
-        });
-
-        if (!project) {
-            res.status(400).json({
-                "success": false,
-                "message": `Project with ID ${projectId} not found`
-            });
-            return
-        }
-
-        // Check if category exists
-        const category = await prisma.category.findUnique({
-            where: { id: categoryId }
-        });
-
-        if (!category) {
-            res.status(404).json({
-                "success": false,
-                "message": `Category with ID ${categoryId} not found`
-            });
-            return
-        }
-
-        // Delete the category
-        await prisma.category.delete({
-            where: { id: categoryId }
-        });
-
-        res.json({
-            "success": true,
-            "message": `Category with ID ${categoryId} deleted successfully`
-        });
-
-    } catch (error) {
-        next(error); // Pass error to global error handler
-    }
-};
-
-
-
-
-export const getAllPosts = async (req: Request, res: Response) => {
-    const posts = await prisma.post.findMany({})
+    const posts = await postService.getAllPosts(projectId);
     res.json({
         "success": true,
         "message": "success",
         "data": posts
     })
-}
+})
 
-export const getSinglePost = async (req: Request, res: Response, next: NextFunction) => {
+
+/**
+ * @route GET /api/projects/:projectId/posts/:slug
+ * @desc Get a single post in a project
+ * @access Public
+ */
+export const getSinglePost = expressAsyncHandler(async (req: Request, res: Response) => {
     const { projectId, slug } = req.params;
-    console.log(req.params)
+    //check if projectId is valid
+    const project = await projectService.getSingleProjectById(projectId);
+    if (!project) {
+        res.status(400).json({
+            "success": false,   
+            "message": `Project with ID ${projectId} not found`
+        })
+        return;
+    }
+    const post = await postService.getSinglePost(projectId, slug);    
+    if (!post) {
+        res.status(400).json({
+            "success": false,
+            "message": `Post with slug ${slug} not found`
+        })
+        return;
+    }   
     res.json({
         "success": true,
         "message": "success",
-        "data": slug,
-        "projectId": projectId
+        "data": post
     })
-}
+})
 
-export const addNewProject = async (req: Request, res: Response) => {
-    const { name } = req.body;
-    if (!name) {
-        res.status(400).json({
-            "success": false,
-            "message": "name is required"
-        });
-        return
-    }
 
-    const project = await prisma.project.create({ data: { name } });
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": project
-    })
-}
+/**
+ * @route POST /api/projects/:projectId/posts
+ * @desc Add a new post in a project
+ * @access Public
+ */
+export const addNewPost = expressAsyncHandler(async (req: Request, res: Response) => {
+    const { projectId } = req.params;
 
-export const updateProject = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { name, description, systemPrompt } = req.body;
-    if (!name) {
-        res.status(400).json({
-            "success": false,
-            "message": "all fields are required to update project"
-        });
-        return
-    }
+    const { title, slug, description, keywords, content, categoryId,
+        author, thumbnail, isDraft, isUpdated, isFeatured, createdAt, updatedAt } = req.body;
+   
+   if (!title || !slug || !description || !keywords || !content || !categoryId) {
+       res.status(400).json({
+           "success": false,
+           "message": "title, slug, description, keywords, content, categoryId are required"
+       })
+       return;
+   }  
 
-    const project = await prisma.project.findUnique({ where: { id } });
+    //check if projectId is valid
+    const project = await projectService.getSingleProjectById(projectId);
     if (!project) {
         res.status(400).json({
             "success": false,
-            "message": "project not found"
-        });
-        return
+            "message": `Project with ID ${projectId} not found`
+        })
+        return;
     }
 
-    const updatedProject = await prisma.project.update({
-        where: { id },
-        data: { name, description, systemPrompt }
-    });
+    // Check if category exists
+    const category = await categoryService.getSingleCategoryinProject(projectId, categoryId);
+    if (!category) {
+        res.status(404).json({
+            "success": false,
+            "message": `Category with ID ${categoryId} not found`
+        });
+        return;
+    }
 
+     
+    const data = { 
+        title, slug, description, keywords, content,
+        projectId, categoryId,
+        author, thumbnail, isDraft, isUpdated, isFeatured,
+        createdAt : createdAt || new Date(),
+        updatedAt : updatedAt || new Date()
+    }
+    const post = await postService.addNewPost(data);
     res.json({
         "success": true,
         "message": "success",
-        "data": updatedProject
+        "data": post
     })
-}
+    
+})  
 
-export const deleteProject = async (req: Request, res: Response) => {
-    const { id } = req.params;
+/**
+ * @route PUT /api/projects/:projectId/posts
+ * @desc Update post in a project and category
+ * @access Public
+ */
+export const updatePost = expressAsyncHandler(async (req: Request, res: Response) => {
+    const { projectId, postId } = req.params;
+    const { title, slug, description, keywords, content, categoryId,
+        author, thumbnail, isDraft, isUpdated, isFeatured, createdAt, updatedAt } = req.body;
 
-    const project = await prisma.project.findUnique({ where: { id } });
+    if (!title || !slug || !description || !keywords || !content || !categoryId) {
+        res.status(400).json({
+            "success": false,
+            "message": "title, slug, description, keywords, content, categoryId are required"
+        })
+        return;
+    }
 
+    //check if projectId is valid
+    const project = await projectService.getSingleProjectById(projectId);
     if (!project) {
         res.status(400).json({
             "success": false,
-            "message": "project not found"
+            "message": `Project with ID ${projectId} not found`
+        })
+        return;
+    }   
+
+    // Check if category exists
+    const category = await categoryService.getSingleCategoryinProject(projectId, categoryId);
+    if (!category) {
+        res.status(404).json({
+            "success": false,
+            "message": `Category with ID ${categoryId} not found`
         });
-        return
+        return;
     }
-    await prisma.project.update({ where: { id }, data: { isActive: false } });
+    
+    const data = {
+        title, slug, description, keywords, content, categoryId, projectId,
+        author, thumbnail, isDraft, isUpdated, isFeatured,
+        createdAt, updatedAt
+    }
+
+    const post = await postService.updatePost(postId, data);
     res.json({
         "success": true,
-        "message": "success",
-        "data": "new project deleted"
+        "message": "post updated successfully",
+        "data": post
     })
-}
+})
 
+/**
+ * @route DELETE /api/projects/:projectId/posts/:postId
+ * @desc Delete post in a project
+ * @access Public
+ */
+export const deletePost = expressAsyncHandler(async (req: Request, res: Response) => {
+    const { projectId, postId } = req.params;
+    const post = await postService.deletePost(projectId, postId);
+    res.json({
+        "success": true,
+        "message": "post deleted successfully",
+        "data": post
+    })
+})

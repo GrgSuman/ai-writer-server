@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { callGemini } from "../../lib/geminiPrompt";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
 import { filterJsonString } from "../../lib/filterJson";
 
 export const generateSummary = async (req: Request, res: Response) => {
@@ -35,7 +35,6 @@ export const generateSummary = async (req: Request, res: Response) => {
         })
     }
     catch (e) {
-        console.log(e);
         res.status(400).json({
             "success": false,
             "message": "something went wrong",
@@ -76,6 +75,7 @@ export const generateOutline = async (req: Request, res: Response) => {
             "success": true,
             "message": "success",
              data
+            // data:"outline"
         })
     }
     catch (e) {
@@ -126,21 +126,22 @@ export const generateAIPost = async (req: Request, res: Response) => {
     `
     try {
         const data = await callGemini(prompt);
+
         res.json({
             "success": true,
             "message": "success",
-            "data":{
-                "title": "Generated Blog Post Title",
-                "description": "Generated Meta Description",
-                "keywords": "Generated Keywords",
-                "content": "Generated Blog Post Content in HTML Format",
-                "wordCount": "Generated Word Count",
-                "timeToRead": "Estimated Time to Read the blog post",
-            }
+            "data": filterJsonString(data)
+            // "data":{
+            //     "title": "Generated Blog Post Title",
+            //     "description": "Generated Meta Description",
+            //     "keywords": "Generated Keywords",
+            //     "content": " <h1> Generated Blog Post Content in HTML Format </h1>",
+            //     "wordCount": "Generated Word Count",
+            //     "timeToRead": "Estimated Time to Read the blog post",
+            // }
         })
     }
 
-            //  "data": filterJsonString(data)
 
     catch (e) {
         console.log("error in e")

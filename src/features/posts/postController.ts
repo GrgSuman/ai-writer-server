@@ -1,26 +1,16 @@
 import { Request, Response } from "express";
 import postService from "./postService";
 import expressAsyncHandler from "express-async-handler";
-import projectService from "../projects/projectService";
 import categoryService from "../categories/categoryService";
+import { CustomRequest } from "../../types/customRequest";
 
 /**
- * @route GET /api/projects/:projectId/posts
+ * @route GET /api/projects/:projectSlug/posts
  * @desc Get all posts in a project
  * @access Public
  */
-export const getAllPosts = expressAsyncHandler( async (req: Request, res: Response) => {
-    const { projectId } = req.params;
-    //check if projectId is valid
-    const project = await projectService.getSingleProjectById(projectId);
-    if (!project) {
-        res.status(400).json({
-            "success": false,
-            "message": `Project with ID ${projectId} not found`
-        })
-        return;
-    }
-    const posts = await postService.getAllPosts(projectId);
+export const getAllPosts = expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+    const posts = await postService.getAllPosts(req?.project?.id || "");
     res.json({
         "success": true,
         "message": "success",
@@ -34,25 +24,17 @@ export const getAllPosts = expressAsyncHandler( async (req: Request, res: Respon
  * @desc Get a single post in a project
  * @access Public
  */
-export const getSinglePost = expressAsyncHandler(async (req: Request, res: Response) => {
-    const { projectId, slug } = req.params;
-    //check if projectId is valid
-    const project = await projectService.getSingleProjectById(projectId);
-    if (!project) {
-        res.status(400).json({
-            "success": false,   
-            "message": `Project with ID ${projectId} not found`
-        })
-        return;
-    }
-    const post = await postService.getSinglePost(projectId, slug);    
+export const getSinglePost = expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+    const { slug } = req.params;
+   
+    const post = await postService.getSinglePost(req?.project?.id || "", slug);
     if (!post) {
         res.status(400).json({
             "success": false,
             "message": `Post with slug ${slug} not found`
         })
         return;
-    }   
+    }
     res.json({
         "success": true,
         "message": "success",
@@ -66,64 +48,66 @@ export const getSinglePost = expressAsyncHandler(async (req: Request, res: Respo
  * @desc Add a new post in a project
  * @access Public
  */
-export const addNewPost = expressAsyncHandler(async (req: Request, res: Response) => {
-    const { projectId } = req.params;
+export const addNewPost = expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+    const postData = req.body;
 
-    const { title, slug, description, keywords, content, categoryId,
-        author, thumbnail, isDraft, isUpdated, isFeatured, createdAt, updatedAt } = req.body;
-   
-   if (!title || !slug || !description || !keywords || !content || !categoryId) {
-       res.status(400).json({
-           "success": false,
-           "message": "title, slug, description, keywords, content, categoryId are required"
-       })
-       return;
-   }  
+    console.log("postData", postData);
 
-    //check if projectId is valid
-    const project = await projectService.getSingleProjectById(projectId);
-    if (!project) {
-        res.status(400).json({
-            "success": false,
-            "message": `Project with ID ${projectId} not found`
-        })
+    // Validate required fields
+    const requiredFields = ['title', 'slug', 'description', 'keywords', 'content', 'categoryId'];
+    const missingFields = requiredFields.filter(field => !postData[field]);
+
+    if (missingFields.length > 0) {
+         res.status(400).json({
+            success: false,
+            message: `Missing required fields: ${missingFields.join(', ')}`
+        });
         return;
     }
+    console.log("req?.project?.id", req?.project?.id);
+    // Validate category exists
+    const category = await categoryService.getSingleCategoryinProject(req?.project?.id || "", postData.categoryId);
 
-    // Check if category exists
-    const category = await categoryService.getSingleCategoryinProject(projectId, categoryId);
     if (!category) {
         res.status(404).json({
-            "success": false,
-            "message": `Category with ID ${categoryId} not found`
+            success: false,
+            message: `Category with ID ${postData.categoryId} not found`
         });
         return;
     }
 
-     
     const data = { 
-        title, slug, description, keywords, content,
-        projectId, categoryId,
-        author, thumbnail, isDraft, isUpdated, isFeatured,
-        createdAt : createdAt || new Date(),
-        updatedAt : updatedAt || new Date()
+        title: postData.title,
+        slug: postData.slug,
+        description: postData.description,
+        keywords: postData.keywords,
+        content: postData.content,
+        projectId: req?.project?.id || "",
+        categoryId: postData.categoryId,
+        author: postData.author,
+        thumbnail: postData.thumbnail,
+        isDraft: postData.isDraft,
+        isUpdated: postData.isUpdated,
+        isFeatured: postData.isFeatured,
+        createdAt : postData.createdAt || new Date(),
+        updatedAt : postData.updatedAt || new Date()
     }
     const post = await postService.addNewPost(data);
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": post
-    })
-    
-})  
+    res.status(201).json({
+        success: true,
+        message: "Post created successfully",
+        data: post
+    });
+});
+
 
 /**
- * @route PUT /api/projects/:projectId/posts
+ * @route PUT /api/projects/:projectSlug/posts/:postId
  * @desc Update post in a project and category
  * @access Public
  */
-export const updatePost = expressAsyncHandler(async (req: Request, res: Response) => {
-    const { projectId, postId } = req.params;
+export const updatePost = expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+    const { postId } = req.params;
     const { title, slug, description, keywords, content, categoryId,
         author, thumbnail, isDraft, isUpdated, isFeatured, createdAt, updatedAt } = req.body;
 
@@ -135,33 +119,19 @@ export const updatePost = expressAsyncHandler(async (req: Request, res: Response
         return;
     }
 
-    //check if projectId is valid
-    const project = await projectService.getSingleProjectById(projectId);
-    if (!project) {
-        res.status(400).json({
-            "success": false,
-            "message": `Project with ID ${projectId} not found`
-        })
-        return;
-    }   
-
     // Check if category exists
-    const category = await categoryService.getSingleCategoryinProject(projectId, categoryId);
-    if (!category) {
+    const categoryCheck = await categoryService.getSingleCategoryinProject(req?.project?.id || "", categoryId);
+    if (!categoryCheck) {
         res.status(404).json({
             "success": false,
             "message": `Category with ID ${categoryId} not found`
         });
         return;
     }
-    
-    const data = {
-        title, slug, description, keywords, content, categoryId, projectId,
-        author, thumbnail, isDraft, isUpdated, isFeatured,
-        createdAt, updatedAt
-    }
 
-    const post = await postService.updatePost(postId, data);
+    const {category, project, ...rest} = req.body;
+
+    const post = await postService.updatePost(postId, rest);
     res.json({
         "success": true,
         "message": "post updated successfully",

@@ -1,4 +1,6 @@
 import prisma from "../../lib/db";
+import { Prisma } from "@prisma/client";
+import formatDateTime from "../../lib/formatDateTime";
 
 export interface CreatePostInterface {
     title: string;
@@ -17,9 +19,15 @@ export interface CreatePostInterface {
     updatedAt?: Date;
   }
 
-const getAllPosts = async (projectId: string) => {
+const getAllPosts = async (projectSlug: string) => {
     try {
-        const posts = await prisma.post.findMany({ where: { projectId } });
+        const posts = await prisma.post.findMany({
+             where: { projectId:projectSlug },
+             include: {
+                category: true,
+                project: true
+             }
+        });
         return posts;
     } catch (error) {
         throw new Error("Error fetching posts");
@@ -28,7 +36,7 @@ const getAllPosts = async (projectId: string) => {
 
 const getSinglePost = async (projectId: string, slug: string) => {
     try {
-        const post = await prisma.post.findUnique({ where: { slug, projectId } });
+        const post = await prisma.post.findFirst({ where: { slug, projectId }, include: { category: true, project: true } });
         return post;
     } catch (error) {
         throw new Error("Error fetching post");
@@ -40,15 +48,28 @@ const addNewPost = async (data: CreatePostInterface) => {
         const newPost = await prisma.post.create({ data });
         return newPost;
     } catch (error) {
+        console.log("error", error);
+        if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                throw new Error("Post with this slug already exists");
+            }
+        }
         throw new Error("Error creating post");
     }
 }
 
 const updatePost = async (id: string, post: CreatePostInterface) => {
+    const formattedPost = {
+        ...post,
+        createdAt: new Date(post.createdAt || ""),
+        updatedAt: new Date(post.updatedAt || "")
+    }
+    console.log(formattedPost)
     try {
-        const updatedPost = await prisma.post.update({ where: { id }, data: post });
+        const updatedPost = await prisma.post.update({ where: { id }, data: formattedPost });
         return updatedPost;
     } catch (error) {
+        console.log("error", error);
         throw new Error("Error updating post");
     }
 }   

@@ -8,6 +8,7 @@ import { projectRoute } from "./features/projects/projectRoute";
 import { errorHandler } from "./middlewares/errorMiddleWare";
 import  postRoute  from "./features/posts/postRoutes";
 import categoryRoute from "./features/categories/categoryRoute";
+import validateProject from "./validators/validateProjectSlug";
 
 
 dotenv.config();
@@ -25,9 +26,9 @@ app.use(logger('dev'));
 // projects api routes
 app.use("/api/projects", projectRoute);
 // categories api under project
-app.use("/api/projects/:projectId/categories", categoryRoute);
+app.use("/api/projects/:projectSlug/categories", validateProject, categoryRoute);
 // posts api routes under project
-app.use('/api/projects/:projectId/posts', postRoute); // Posts under a specific project
+app.use('/api/projects/:projectSlug/posts', validateProject, postRoute); // Posts under a specific project
 
 // postgpt api routes
 app.use("/api/postgpt", postgptRoute);

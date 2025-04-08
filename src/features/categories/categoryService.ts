@@ -24,6 +24,24 @@ const getSingleCategoryinProject = async (projectId: string, categoryId: string)
     }
 }
 
+const getSingleCategoryinProjectBySlug = async (projectId: string, categorySlug: string) => {
+    try {
+        const category = await prisma.category.findFirst({
+            where: { projectId, slug: categorySlug },
+            include: {
+                posts: {
+                    include: {
+                        category: true
+                    }
+                },
+            }
+        });
+        return category;
+    } catch (error) {
+        throw new Error("Error fetching category");
+    }
+}
+
 const addNewCategoryinProject = async (projectId: string, name: string) => {
     try {
         const category = await prisma.category.create({ data: { projectId, name, slug: slugify(name) } });
@@ -54,6 +72,7 @@ const deleteCategoryinProject = async (projectId: string, categoryId: string) =>
 export default {
     getAllCategoriesinProject,
     getSingleCategoryinProject,
+    getSingleCategoryinProjectBySlug,
     addNewCategoryinProject,
     updateCategoryinProject,
     deleteCategoryinProject

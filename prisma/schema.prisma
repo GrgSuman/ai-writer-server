@@ -27,17 +27,20 @@ model Project {
 
 model Category{
   id              String  @id @default(uuid())  // Unique ID
-  name            String  @unique // Category Name
-  slug            String  @unique // Category Slug
+  name            String  // Category Name
+  slug            String  // Category Slug
   projectId       String  // Foreign key to Project
   project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   posts           Post[]  // Relation to Posts
+
+  @@unique([projectId, name]) // Category name must be unique within a project
+  @@unique([projectId, slug]) // Category slug must be unique within a project
 }
 
 model Post {
   id          String   @id @default(uuid())  // Unique ID
-  title       String   @unique // Post title
-  slug        String   @unique// Category Slug
+  title       String   // Post title
+  slug        String   // Category Slug
   description String // Post description 
   keywords    String // list of keywords
   content     String   // Post content
@@ -55,5 +58,8 @@ model Post {
 
   createdAt   DateTime @default(now()) // Timestamp for creation
   updatedAt   DateTime @updatedAt      // Auto-updated on modification
+
+  @@unique([projectId, title]) // Post titles must be unique within a project
+  @@unique([projectId, slug]) // Post slug must be unique within a project
 }
 

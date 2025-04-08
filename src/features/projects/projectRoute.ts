@@ -3,14 +3,11 @@ import { getAllProjects,addNewProject, deleteProject, updateProject,getSinglePro
 
 const router = Router();
 
-router.route("/")
-        .get(getAllProjects)
-        .post(addNewProject);
-
-router.route("/:id")
-            .get(getSingleProject)
-            .put(updateProject)
-            .delete(deleteProject);
+router.get("/",getAllProjects);
+router.post("/",addNewProject);
+router.get("/:slug",getSingleProject);
+router.put("/:id",updateProject);
+router.delete("/:id",deleteProject);
 
 
 export const projectRoute = router; 

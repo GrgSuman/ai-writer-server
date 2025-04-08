@@ -1,24 +1,14 @@
 import express from 'express';
-import { addNewCategory, deleteCategory, getAllCategories, getAllPosts, getSingleCategory, getSinglePost, updateCategory } from './postController';
+import { addNewPost, deletePost, getAllPosts, getSinglePost, updatePost } from './postController';
+import validateProject from '../../validators/validateProjectSlug';
 
 const router = express.Router({ mergeParams: true });
 
-router.route('/categories')
-.get( getAllCategories)
-.post(addNewCategory);
+router.get("/", validateProject, getAllPosts);
+router.get("/:slug", validateProject, getSinglePost);
+router.post("/", validateProject, addNewPost);
+router.put("/:postId", validateProject, updatePost);
+router.delete("/:postId", validateProject, deletePost);
 
-router.route('/categories/:categoryId')
-.get(getSingleCategory)
-.put(updateCategory)
-.delete(deleteCategory);
 
-router.route('/posts')
-.get(getAllPosts)
-// .post(addNewPost);
-
-router.route('/posts/:slug')
-.get(getSinglePost)
-// .post(updatePost)
-// .delete(deletePost);
-
-export const postRoute = router
+export default router;

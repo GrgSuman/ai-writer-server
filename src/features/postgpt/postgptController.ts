@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { callGemini } from "../../lib/geminiPrompt";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+import { filterJsonString } from "../../lib/filterJson";
 
 export const generateSummary = async (req: Request, res: Response) => {
 
@@ -22,11 +23,11 @@ export const generateSummary = async (req: Request, res: Response) => {
                     Blog Content:
                     ${content}`;
     try {
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API || "");
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(prompt);
-        const data = result.response.text();
-        // const data = await callGemini(prompt);
+        // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API || "");
+        // const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // const result = await model.generateContent(prompt);
+        // const data = result.response.text();
+        const data = await callGemini(prompt);
         res.json({
             "success": true,
             "message": "success",
@@ -34,7 +35,6 @@ export const generateSummary = async (req: Request, res: Response) => {
         })
     }
     catch (e) {
-        console.log(e);
         res.status(400).json({
             "success": false,
             "message": "something went wrong",
@@ -75,6 +75,7 @@ export const generateOutline = async (req: Request, res: Response) => {
             "success": true,
             "message": "success",
              data
+            // data:"outline"
         })
     }
     catch (e) {
@@ -86,6 +87,7 @@ export const generateOutline = async (req: Request, res: Response) => {
 }
 
 export const generateAIPost = async (req: Request, res: Response) => {
+    console.log(req.body)
     const { title, description, keywords, wordCount, writingStyle, summaryContents, outline } = req.body;
     if (!title || !description || !keywords || !wordCount || !writingStyle || !summaryContents || !outline) {
         console.log("error")
@@ -110,15 +112,37 @@ export const generateAIPost = async (req: Request, res: Response) => {
         *   **Writing Style:** ${writingStyle}
         *   **Summary Contents:** ${summaryContents} (from competitor blogs)
         *   **Outline:** ${outline}
+        * 
+        As a result, it should return json object with the following structure:
+            {
+                "title": "Generated Blog Post Title",
+                "description": "Generated Meta Description",
+                "keywords": "Generated Keywords",
+                "content": "Generated Blog Post Content in HTML Format",
+                "wordCount": "Generated Word Count",
+                "timeToRead": "Estimated Time to Read the blog post",
+            }
+        
     `
     try {
         const data = await callGemini(prompt);
+
         res.json({
             "success": true,
             "message": "success",
-             data
+            "data": filterJsonString(data)
+            // "data":{
+            //     "title": "Generated Blog Post Title",
+            //     "description": "Generated Meta Description",
+            //     "keywords": "Generated Keywords",
+            //     "content": " <h1> Generated Blog Post Content in HTML Format </h1>",
+            //     "wordCount": "Generated Word Count",
+            //     "timeToRead": "Estimated Time to Read the blog post",
+            // }
         })
     }
+
+
     catch (e) {
         console.log("error in e")
         res.status(400).json({

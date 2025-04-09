@@ -13,10 +13,11 @@ datasource db {
 model Project {
   id              String  @id @default(uuid())  // Unique ID
   name            String  // Project Name
-  slug            String  @unique  // Project Slug
   description     String? // Project Description (optional)
   systemPrompt    String?  // System Prompt for the Project
   isActive        Boolean @default(true) // Active status
+  gradientStart   String? //card color for project listings
+  gradientEnd     String? //card color gradiend (they will be set automatically)
 
   posts           Post[] // Relation to Posts
   categorys       Category[] // Relation to Category

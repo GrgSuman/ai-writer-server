@@ -1,78 +1,82 @@
+import { Prisma } from "@prisma/client";
 import prisma from "../../lib/db";
-import { slugify } from "../../lib/slugify";
+import AppError from "../../utils/appError";
 
 const getProjects = async () => {
-    try {
-        const projects = await prisma.project.findMany({ 
-            where: {
-                 isActive: true
-                 },
-            include: {
-                categorys: true
-            }
-         });
-        return projects
-    } catch (error) {
-        throw new Error("Error fetching projects");
-    }
-}
+    const projects = await prisma.project.findMany({
+        where: {
+            isActive: true
+        },
+        include: {
+            categorys: true
+        }
+    });
 
-const getSingleProjectBySlug = async (slug: string) => {
-    try {
-        const projects = await prisma.project.findUnique({ where: { isActive: true, slug } });
-        return projects
-    } catch (error) {
-        throw new Error("Error fetching projects");
+    if (!projects) {
+        throw new AppError("No projects found", 404);
     }
+    return projects
 }
 
 const getSingleProjectById = async (id: string) => {
-    try {
-        const projects = await prisma.project.findUnique({ where: { isActive: true, id } });
-        return projects
-    } catch (error) {
-        throw new Error("Error fetching projects");
+    const projects = await prisma.project.findUnique({ where: { isActive: true, id } });
+    if (!projects) {
+        throw new AppError("No projects found", 404);
     }
+    return projects
 }
 
-const addNewProject = async (name: string) => {
+const addNewProject = async (name: string, gradientStart: string, gradientEnd: string) => {
     try {
-        const project = await prisma.project.create({ data: { name, slug: slugify(name) } });
+        const project = await prisma.project.create({ data: { name, gradientStart, gradientEnd } });
+        if (!project) {
+            throw new AppError("Error adding project", 404);
+        }
         return project
     } catch (error) {
-        throw new Error("Error adding project");
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                throw new AppError("Project with this name already exists", 400);
+            }
+        }
+        throw new AppError("Error adding project", 404);
     }
 }
 
-const updateProject = async (id: string, name: string,description: string,systemPrompt: string) => {
+const updateProject = async (id: string, name: string, description: string, systemPrompt: string) => {
     try {
-        const project = await prisma.project.update({ 
+        const project = await prisma.project.update({
             where: { id },
             data: {
-                name, 
-                slug: slugify(name),
+                name,
                 description,
-                systemPrompt 
+                systemPrompt
             }
-         });
+        });
+
         return project
-    } catch (error) {
-        throw new Error("Error updating project");
     }
+    catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                throw new AppError("Project with this name already exists", 400);
+            }
+        }
+        throw new AppError("Error updating project", 404);
+    }
+
 }
 
 const deleteProject = async (id: string) => {
-    try {
-        const project = await prisma.project.delete({ where: { id } });
-        return project
-    } catch (error) {
-        throw new Error("Error deleting project");
+    const project = await prisma.project.delete({ where: { id } });
+    if (!project) {
+        throw new AppError("Error deleting project", 404);
     }
+    return project
 }
 
 const projectService = {
     getProjects,
-    getSingleProjectBySlug,
     getSingleProjectById,
     addNewProject,
     updateProject,

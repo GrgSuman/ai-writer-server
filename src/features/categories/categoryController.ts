@@ -37,6 +37,7 @@ export const getSingleCategoryinProject =  expressAsyncHandler(async (req: Reque
 export const addNewCategoryinProject =  expressAsyncHandler(async (req: Request, res: Response) => {
     const { name } = req.body;
     const { projectId } = req.params;
+    console.log(name, projectId);
     if (!name) {
         throw new AppError("Category name is required", 400);
     }

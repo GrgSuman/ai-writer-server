@@ -4,7 +4,14 @@ import { slugify } from "../../lib/slugify";
 import AppError from "../../utils/appError";
 
 const getAllCategoriesinProject = async (projectId: string) => {
-        const categories = await prisma.category.findMany({ where: { projectId } });
+        const categories = await prisma.category.findMany({
+             where: { projectId },
+             include: {
+                _count: {
+                    select: { posts: true }
+                }
+             }
+        });
         if (!categories) {
             throw new AppError("No categories found", 404);
         }

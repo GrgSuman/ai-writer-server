@@ -8,22 +8,36 @@ const getProjects = async () => {
             isActive: true
         },
         include: {
-            categorys: true
+            categorys: true,
+            _count: {
+                select: { posts: true }
+              }
         }
     });
 
     if (!projects) {
         throw new AppError("No projects found", 404);
     }
+
+    
     return projects
 }
 
 const getSingleProjectById = async (id: string) => {
-    const projects = await prisma.project.findUnique({ where: { isActive: true, id } });
+    const projects = await prisma.project.findUnique({
+         where:{ isActive: true, id },
+         include: {
+            categorys: true,
+            _count: {
+                select: { posts: true }
+              }
+         }
+         
+        });
     if (!projects) {
         throw new AppError("No projects found", 404);
     }
-    return projects
+    return projects;
 }
 
 const addNewProject = async (name: string, gradientStart: string, gradientEnd: string) => {
@@ -62,6 +76,7 @@ const updateProject = async (id: string, name: string, description: string, syst
                 throw new AppError("Project with this name already exists", 400);
             }
         }
+        console.log(error)
         throw new AppError("Error updating project", 404);
     }
 

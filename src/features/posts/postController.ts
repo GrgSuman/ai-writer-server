@@ -84,7 +84,6 @@ export const updatePost = expressAsyncHandler(async (req: CustomRequest, res: Re
     const { projectId } = req.params;
 
     const postData = req.body;
-
      // Validate required fields
     const requiredFields = ['title', 'slug', 'description', 'keywords', 'content', 'categoryId'];
     const missingFields = requiredFields.filter(field => !postData[field]);

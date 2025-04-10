@@ -26,6 +26,9 @@ const getAllPosts = async (projectId: string) => {
             include: {
             category: true,
             project: true
+            },
+            orderBy:{
+                updatedAt: 'desc'
             }
     });
     if (!posts) {
@@ -71,6 +74,7 @@ const updatePost = async (id: string, post: CreatePostInterface) => {
                 throw new AppError("Post with this slug/title already exists", 400);
             }
         }   
+        console.log(error)
         throw new AppError("Error updating post", 400);
     }
 }   

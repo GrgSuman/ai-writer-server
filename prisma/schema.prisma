@@ -49,10 +49,10 @@ model Post {
   author      String?  // author is (optional)
   isDraft     Boolean  @default(true)
   isUpdated   Boolean  @default(false)
-  isFeatured   Boolean  @default(false)
+  isFeatured  Boolean  @default(false)
 
   categoryId  String   // Category of the post
-  category     Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   projectId   String   // Foreign key to Project
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)

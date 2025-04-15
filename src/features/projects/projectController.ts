@@ -3,6 +3,7 @@ import expressAsyncHandler from "express-async-handler";
 import projectService from "./projectService";
 import sendResponse from "../../utils/sendResponse";
 import AppError from "../../utils/appError";
+import prisma from "../../lib/db";
 /**
  * @route GET /api/projects
  * @desc Get all projects
@@ -30,22 +31,26 @@ export const getSingleProject =  expressAsyncHandler(async (req: Request, res: R
  * @access Public
  */
 export const addNewProject = expressAsyncHandler(async (req: Request, res: Response) => {
-    // Soft background color combinations for cards
     const softColorPalettes = [
-        { start: "#f0e6fa", end: "#d8c8f0" }, // Soft Lavender
-        { start: "#e0f5ff", end: "#c2e5fb" }, // Pale Sky
-        { start: "#fff2cc", end: "#ffe699" }, // Buttercream
-        { start: "#d9f2e6", end: "#b3e6cc" }, // Mint Cream
-        { start: "#ffe0e0", end: "#ffb3b3" }, // Blush Pink
-        { start: "#e6f9ff", end: "#ccf2ff" }, // Ice Blue
-        { start: "#fff0e6", end: "#ffd9bf" }, // Peach Cream
-        { start: "#f2e6ff", end: "#e0ccff" }, // Lilac Mist
-        { start: "#e6fffa", end: "#b3fff0" }, // Seafoam
-        { start: "#f9f2ff", end: "#ecd9ff" }  // Orchid Haze
+        { start: "#fdfbfb", end: "#ebedee" }, // Light Gray Mist
+        { start: "#f6f8ff", end: "#dbe4ff" }, // Baby Blue
+        { start: "#ffe9ec", end: "#ffd3e2" }, // Blush Pink
+        { start: "#e0fff9", end: "#ccf5ef" }, // Minty Breeze
+        { start: "#fff8e1", end: "#ffecb3" }, // Soft Peach
+        { start: "#e9f7ef", end: "#d0f0d6" }, // Pale Green
+        { start: "#fef9e7", end: "#fff3cd" }, // Light Cream
+        { start: "#f3e5f5", end: "#e1bee7" }, // Lavender Haze
+        { start: "#f0f4c3", end: "#e6ee9c" }, // Light Lemon
+        { start: "#e0f7fa", end: "#b2ebf2" }  // Powder Blue
     ];
     const { name } = req.body;
     if (!name) {
         throw new AppError("Project Name is required", 400);
+    }
+
+    const projectExists = await prisma.project.findFirst({ where: { name } });
+    if (projectExists) {
+        throw new AppError("Project with this name already exists", 400);
     }
 
     const gradientStart = softColorPalettes[Math.floor(Math.random() * softColorPalettes.length)].start;    
@@ -67,6 +72,12 @@ export const updateProject = expressAsyncHandler(async (req: Request, res: Respo
     if(!name || !description || !systemPrompt){
         throw new AppError("all fields are required to update project", 400);
     }
+
+    const projectExists = await prisma.project.findFirst({ where: { name } });
+    if (projectExists) {
+        throw new AppError("Project with this name already exists", 400);
+    }
+
     const updatedProject = await projectService.updateProject(projectId, name, description, systemPrompt);
     sendResponse({res, message: "Project updated successfully", data: updatedProject})
 })

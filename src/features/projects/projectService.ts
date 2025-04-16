@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../../lib/db";
 import AppError from "../../utils/appError";
+import { get } from "http";
 
 const getProjects = async () => {
     const projects = await prisma.project.findMany({
@@ -23,6 +24,29 @@ const getProjects = async () => {
     return projects
 }
 
+const getProjectsByUserId = async (userId: string) => {
+    const projects = await prisma.project.findMany({
+        where: {
+            isActive: true,
+            userId
+        },
+        include: {
+            categorys: true,
+            _count: {
+                select: { posts: true }
+              }
+        }
+    });
+
+    if (!projects) {
+        throw new AppError("No projects found", 404);
+    }
+
+    
+    return projects
+}
+
+
 const getSingleProjectById = async (id: string) => {
     const projects = await prisma.project.findUnique({
          where:{ isActive: true, id },
@@ -40,9 +64,26 @@ const getSingleProjectById = async (id: string) => {
     return projects;
 }
 
-const addNewProject = async (name: string, gradientStart: string, gradientEnd: string) => {
+const getSingleProjectByIdandUser = async (projectId: string,userId: string) => {
+    const projects = await prisma.project.findUnique({
+         where:{ isActive: true, id:projectId, userId },
+         include: {
+            categorys: true,
+            _count: {
+                select: { posts: true }
+              }
+         }
+         
+        });
+    if (!projects) {
+        throw new AppError("No projects found", 404);
+    }
+    return projects;
+}
+
+const addNewProject = async (name: string, gradientStart: string, gradientEnd: string, userId: string) => {
     try {
-        const project = await prisma.project.create({ data: { name, gradientStart, gradientEnd } });
+        const project = await prisma.project.create({ data: { name, gradientStart, gradientEnd, userId } });
         if (!project) {
             throw new AppError("Error adding project", 404);
         }
@@ -93,6 +134,8 @@ const deleteProject = async (id: string) => {
 const projectService = {
     getProjects,
     getSingleProjectById,
+    getProjectsByUserId,
+    getSingleProjectByIdandUser,
     addNewProject,
     updateProject,
     deleteProject

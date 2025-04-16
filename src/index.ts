@@ -36,9 +36,9 @@ app.use("/api/auth", authRoutes);
 // projects api routes
 app.use("/api/projects", verifyUser, projectRoute);
 // categories api under project
-app.use("/api/projects/:projectId/categories", validateProject, categoryRoute);
+app.use("/api/projects/:projectId/categories", verifyUser, validateProject, categoryRoute);
 // posts api routes under project
-app.use('/api/projects/:projectId/posts', validateProject, postRoute); // Posts under a specific project
+app.use('/api/projects/:projectId/posts',verifyUser, validateProject, postRoute); // Posts under a specific project
 
 // postgpt api routes
 app.use("/api/postgpt", postgptRoute);

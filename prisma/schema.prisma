@@ -48,8 +48,10 @@ model Project {
   createdAt       DateTime @default(now()) // Timestamp for creation
   updatedAt       DateTime @updatedAt      // Auto-updated on modification
 
-  userId        String @default("admin")
+  userId        String  // Foreign key to User
   user          User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name]) // Project name must be unique within a user
 }
 
 model Category{

@@ -1,6 +1,6 @@
 import { NextFunction, Response } from "express"
 import expressAsyncHandler from "express-async-handler";
-import jwt from "jsonwebtoken"
+import jwt, { JwtPayload } from "jsonwebtoken"
 import AppError from "../utils/appError";
 import { RequestWithUser } from "../types/customRequest";
 
@@ -14,8 +14,13 @@ export const verifyUser = expressAsyncHandler((req:RequestWithUser,res:Response,
     
         const token = authHeader.split(' ')[1]; // Get token after "Bearer"
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-        console.log(decoded)
-        req.userId = "decoded"; // Attach decoded payload to req.user
-        next();
+
+        if (typeof decoded === 'object' && decoded !== null && 'userId' in decoded) {
+            const userId = (decoded as JwtPayload & { userId: string }).userId;
+            req.userId = userId; // Attach decoded payload to req.userId
+            return next();
+        }
+
+        throw new AppError("Invalid token",401)
 })
 

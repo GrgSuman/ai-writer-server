@@ -11,6 +11,8 @@ export const loginAndSignupUser = expressAsyncHandler(async (req: Request, res: 
         throw new AppError("name and email are required", 400)
     }
 
+    let message = "User logged in successfully";
+
     let userData = await prisma.user.findFirst({ where: { email } })
     if (!userData) {
         userData = await prisma.user.create({
@@ -20,6 +22,7 @@ export const loginAndSignupUser = expressAsyncHandler(async (req: Request, res: 
                 profile_url
             }
         })
+        message = "User created successfully"
     }
 
     const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -33,5 +36,5 @@ export const loginAndSignupUser = expressAsyncHandler(async (req: Request, res: 
 
     // Create the token (expires in 1 hour)
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
-    sendResponse({ res, data: token })
+    sendResponse({ res, message, data: token })
 })

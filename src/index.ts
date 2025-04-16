@@ -8,7 +8,10 @@ import { projectRoute } from "./features/projects/projectRoute";
 import { errorHandler } from "./middlewares/errorMiddleWare";
 import  postRoute  from "./features/posts/postRoutes";
 import categoryRoute from "./features/categories/categoryRoute";
-import validateProject from "./validators/validateProjectSlug";
+import validateProject from "./validators/validateProjectId";
+import authRoutes from "./features/auth/authRoute";
+import cookieParser from "cookie-parser";
+import { verifyUser } from "./middlewares/verifyUser";
 
 
 dotenv.config();
@@ -17,18 +20,25 @@ const app = express();
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 
+app.use(cookieParser());
+
 app.use(cors({
-    origin: "*"
+    origin: "*",
+    credentials: true
 }));
 
 app.use(logger('dev'));
 
+
+//auth routes
+app.use("/api/auth", authRoutes);
+
 // projects api routes
-app.use("/api/projects", projectRoute);
+app.use("/api/projects", verifyUser, projectRoute);
 // categories api under project
-app.use("/api/projects/:projectSlug/categories", validateProject, categoryRoute);
+app.use("/api/projects/:projectId/categories", verifyUser, validateProject, categoryRoute);
 // posts api routes under project
-app.use('/api/projects/:projectSlug/posts', validateProject, postRoute); // Posts under a specific project
+app.use('/api/projects/:projectId/posts',verifyUser, validateProject, postRoute); // Posts under a specific project
 
 // postgpt api routes
 app.use("/api/postgpt", postgptRoute);

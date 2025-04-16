@@ -1,78 +1,82 @@
+import { Prisma } from "@prisma/client";
 import prisma from "../../lib/db";
 import { slugify } from "../../lib/slugify";
+import AppError from "../../utils/appError";
 
 const getAllCategoriesinProject = async (projectId: string) => {
-    try {
-        const categories = await prisma.category.findMany({ where: { projectId } });
+        const categories = await prisma.category.findMany({
+             where: { projectId },
+             include: {
+                _count: {
+                    select: { posts: true }
+                }
+             }
+        });
+        if (!categories) {
+            throw new AppError("No categories found", 404);
+        }
         return categories;
-    } catch (error) {
-        throw new Error("Error fetching categories");
-    }
 }
 
-const getSingleCategoryinProject = async (projectId: string, categoryId: string) => {
-    try {
+const getSingleCategoryinProject = async ( categoryId: string) => {
         const category = await prisma.category.findUnique({
-            where: { projectId, id: categoryId },
+            where: { id: categoryId },
             include: {
                 posts: true
             }
         });
+        if (!category) {
+            throw new AppError("Category not found", 404);
+        }
         return category;
-    } catch (error) {
-        throw new Error("Error fetching category");
-    }
 }
 
-const getSingleCategoryinProjectBySlug = async (projectId: string, categorySlug: string) => {
-    try {
-        const category = await prisma.category.findFirst({
-            where: { projectId, slug: categorySlug },
-            include: {
-                posts: {
-                    include: {
-                        category: true
-                    }
-                },
-            }
-        });
-        return category;
-    } catch (error) {
-        throw new Error("Error fetching category");
-    }
-}
 
 const addNewCategoryinProject = async (projectId: string, name: string) => {
-    try {
-        const category = await prisma.category.create({ data: { projectId, name, slug: slugify(name) } });
+    try{
+        const category = await prisma.category.create({ data: { projectId, name, slug: slugify(name) } });  
+        if (!category) {
+            throw new AppError("Failed to add category", 400);
+        }
         return category;
-    } catch (error) {
-        throw new Error("Error adding category");
+    }catch(error){
+        if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                throw new AppError("Category with this name already exists", 400);
+            }
+        }
+        throw new AppError("Failed to add category", 400);
     }
 }
 
-const updateCategoryinProject = async (projectId: string, categoryId: string, name: string) => {
-    try {
-        const category = await prisma.category.update({ where: { projectId, id: categoryId }, data: { name, slug: slugify(name) } });
+const updateCategoryinProject = async (categoryId: string, name: string) => {
+    try{
+        const category = await prisma.category.update({ where: { id: categoryId }, data: { name, slug: slugify(name) } });
+        if (!category) {
+            throw new AppError("Failed to update category", 400);
+        }
         return category;
-    } catch (error) {
-        throw new Error("Error updating category");
-    }
+    }catch(error){
+        if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                throw new AppError("Category with this name already exists", 400);
+            }
+        }
+        throw new AppError("Failed to update category", 400);
+    }           
 }
 
-const deleteCategoryinProject = async (projectId: string, categoryId: string) => {
-    try {
-        const category = await prisma.category.delete({ where: { projectId, id: categoryId } });
-        return category;
-    } catch (error) {
-        throw new Error("Error deleting category");
+const deleteCategoryinProject = async ( categoryId: string) => {
+    const category = await prisma.category.delete({ where: { id: categoryId } });
+    if (!category) {
+        throw new AppError("Failed to delete category", 400);
     }
+    return category;
 }
 
 export default {
     getAllCategoriesinProject,
     getSingleCategoryinProject,
-    getSingleCategoryinProjectBySlug,
     addNewCategoryinProject,
     updateCategoryinProject,
     deleteCategoryinProject

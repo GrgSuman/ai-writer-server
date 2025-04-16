@@ -1,6 +1,7 @@
 import prisma from "../../lib/db";
 import { Prisma } from "@prisma/client";
 import formatDateTime from "../../lib/formatDateTime";
+import AppError from "../../utils/appError";
 
 export interface CreatePostInterface {
     title: string;
@@ -19,28 +20,34 @@ export interface CreatePostInterface {
     updatedAt?: Date;
   }
 
-const getAllPosts = async (projectSlug: string) => {
-    try {
-        const posts = await prisma.post.findMany({
-             where: { projectId:projectSlug },
-             include: {
-                category: true,
-                project: true
-             }
-        });
-        return posts;
-    } catch (error) {
-        throw new Error("Error fetching posts");
+const getAllPosts = async (projectId: string) => {
+    const posts = await prisma.post.findMany({
+            where: { projectId },
+            include: {
+            category: true,
+            project: true
+            },
+            orderBy:{
+                updatedAt: 'desc'
+            }
+    });
+    if (!posts) {
+        throw new AppError("No posts found", 404);
     }
+    return posts;
 }
 
-const getSinglePost = async (projectId: string, slug: string) => {
-    try {
-        const post = await prisma.post.findFirst({ where: { slug, projectId }, include: { category: true, project: true } });
-        return post;
-    } catch (error) {
-        throw new Error("Error fetching post");
-    }
+const getSinglePost = async (postId: string) => {
+    const post = await prisma.post.findUnique({
+         where: { id: postId },
+        include: {
+             category: true,
+              project: true
+        }});
+    if (!post) {
+        throw new AppError("No post found", 404);
+    }   
+    return post;
 }
 
 const addNewPost = async (data: CreatePostInterface) => {
@@ -48,39 +55,36 @@ const addNewPost = async (data: CreatePostInterface) => {
         const newPost = await prisma.post.create({ data });
         return newPost;
     } catch (error) {
-        console.log("error", error);
         if(error instanceof Prisma.PrismaClientKnownRequestError){
             if (error.code === 'P2002') {
-                throw new Error("Post with this slug already exists");
+                throw new AppError("Post with this slug/title already exists", 400);
             }
         }
-        throw new Error("Error creating post");
+        throw new AppError("Error creating post", 400);
     }
 }
 
 const updatePost = async (id: string, post: CreatePostInterface) => {
-    const formattedPost = {
-        ...post,
-        createdAt: new Date(post.createdAt || ""),
-        updatedAt: new Date(post.updatedAt || "")
-    }
-    console.log(formattedPost)
     try {
-        const updatedPost = await prisma.post.update({ where: { id }, data: formattedPost });
+        const updatedPost = await prisma.post.update({ where: { id }, data: post });
         return updatedPost;
     } catch (error) {
-        console.log("error", error);
-        throw new Error("Error updating post");
+        if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                throw new AppError("Post with this slug/title already exists", 400);
+            }
+        }   
+        console.log(error)
+        throw new AppError("Error updating post", 400);
     }
 }   
 
-const deletePost = async (projectId: string, id: string) => {
-    try {
-        const deletedPost = await prisma.post.delete({ where: { id, projectId } });
-        return deletedPost;
-    } catch (error) {
-        throw new Error("Error deleting post");
+const deletePost = async ( id: string) => {
+    const deletedPost = await prisma.post.delete({ where: { id } });
+    if (!deletedPost) {
+        throw new AppError("Post not found", 404);
     }
+    return deletedPost;
 }
 
 export default {

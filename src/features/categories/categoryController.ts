@@ -1,21 +1,17 @@
 import categoryService from "./categoryService";
 import expressAsyncHandler from "express-async-handler";
 import { Request, Response } from "express";
-import projectService from "../projects/projectService";
-import { CustomRequest } from "../../types/customRequest";
+import sendResponse from "../../utils/sendResponse";
+import AppError from "../../utils/appError";
 /**
- * @route GET /api/projects/:projectSlug/categories
+ * @route GET /api/projects/:projectId/categories
  * @desc Get all categories in a project
  * @access Public
  */
-export const getAllCategoriesinProject =  expressAsyncHandler(async (req: CustomRequest, res: Response) => {
-
-    const categories = await categoryService.getAllCategoriesinProject(req?.project?.id || "");
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": categories
-    });
+export const getAllCategoriesinProject =  expressAsyncHandler(async (req: Request, res: Response) => {
+    const { projectId } = req.params;
+    const categories = await categoryService.getAllCategoriesinProject(projectId);
+    sendResponse({res, data: categories});
 })
 
 /**
@@ -23,100 +19,49 @@ export const getAllCategoriesinProject =  expressAsyncHandler(async (req: Custom
  * @desc Get a single category in a project
  * @access Public
  */
-export const getSingleCategoryinProject =  expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+export const getSingleCategoryinProject =  expressAsyncHandler(async (req: Request, res: Response) => {
     const { categoryId } = req.params;
 
-    const category = await categoryService.getSingleCategoryinProject(req?.project?.id || "", categoryId);
+    const category = await categoryService.getSingleCategoryinProject(categoryId);
     if (!category) {
-        res.status(404).json({
-            "success": false,
-            "message": "Category not found"
-        });
-        return;
+        throw new AppError("Category not found", 404);
     }
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": category
-    });
+    sendResponse({res, data: category});
 })  
 
 /**
- * @route GET /api/projects/:projectId/categories/:categorySlug
- * @desc Get a single category in a project
- * @access Public
- */
-export const getSingleCategoryinProjectBySlug =  expressAsyncHandler(async (req: CustomRequest, res: Response) => {
-    const { categorySlug } = req.params;
-
-    const category = await categoryService.getSingleCategoryinProjectBySlug(req?.project?.id || "", categorySlug);
-    if (!category) {
-        res.status(404).json({
-            "success": false,
-            "message": "Category not found"
-        });
-        return;
-    }
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": category
-    });
-})  
-
-/**
- * @route POST /api/projects/:projectSlug/categories
+ * @route POST /api/projects/:projectId/categories
  * @desc Add a new category in a project
  * @access Public
  */
-export const addNewCategoryinProject =  expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+export const addNewCategoryinProject =  expressAsyncHandler(async (req: Request, res: Response) => {
     const { name } = req.body;
+    const { projectId } = req.params;
+    console.log(name, projectId);
     if (!name) {
-         res.status(400).json({     
-            "success": false,
-            "message": "Name is required"
-        });
-        return;
+        throw new AppError("Category name is required", 400);
     }
 
-    const category = await categoryService.addNewCategoryinProject(req?.project?.id || "", name);
-    if (!category) {
-        res.status(400).json({
-            "success": false,
-            "message": "Failed to add category"
-        });
-        return;
-    }
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": category
-    });
+    const category = await categoryService.addNewCategoryinProject(projectId, name);
+    sendResponse({res, message: "Category created successfully", data: category});
 })
+
+
 
 /**
  * @route PUT /api/projects/:projectSlug/categories/:categoryId
  * @desc Update a category in a project
  * @access Public
  */
-export const updateCategoryinProject =  expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+export const updateCategoryinProject =  expressAsyncHandler(async (req: Request, res: Response) => {
     const { categoryId } = req.params;
     const { name } = req.body;
-
     if (!name) {
-        res.status(400).json({
-            "success": false,
-            "message": "Name is required"
-        });
-        return;
+        throw new AppError("Category name is required", 400);
     }
 
-    const category = await categoryService.updateCategoryinProject(req?.project?.id || "", categoryId, name);
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": category
-    });
+    const category = await categoryService.updateCategoryinProject(categoryId, name);
+    sendResponse({res, message: "Category updated successfully", data: category});
 })
 
 /**
@@ -124,14 +69,10 @@ export const updateCategoryinProject =  expressAsyncHandler(async (req: CustomRe
  * @desc Delete a category in a project
  * @access Public
  */
-export const deleteCategoryinProject =  expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+export const deleteCategoryinProject =  expressAsyncHandler(async (req: Request, res: Response) => {
     const { categoryId } = req.params;
-    const category = await categoryService.deleteCategoryinProject(req?.project?.id || "", categoryId);
-    res.json({
-        "success": true,
-        "message": "success",
-        "data": category
-    });
+    const category = await categoryService.deleteCategoryinProject(categoryId);
+    sendResponse({res, message: "Category deleted successfully", data: category});
 })
 
 

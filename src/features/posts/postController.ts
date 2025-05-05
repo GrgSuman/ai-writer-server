@@ -28,6 +28,17 @@ export const getSinglePost = expressAsyncHandler(async (req: CustomRequest, res:
     sendResponse({res, data: post});
 })
 
+/**
+ * @route GET /api/projects/:projectId/posts/slug/:postSlug
+ * @desc Get a single post in a project
+ * @access Public
+ */
+export const getSinglePostBySlug = expressAsyncHandler(async (req: CustomRequest, res: Response) => {
+    const { postSlug } = req.params;
+    const post = await postService.getSinglePostBySlug(postSlug);
+    sendResponse({res, data: post});
+})
+
 
 /**
  * @route POST /api/projects/:projectId/posts

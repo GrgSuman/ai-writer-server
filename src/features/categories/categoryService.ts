@@ -26,9 +26,25 @@ const getSingleCategoryinProject = async ( categoryId: string) => {
             }
         });
         if (!category) {
+            console.log("lado");
             throw new AppError("Category not found", 404);
         }
         return category;
+}
+
+const getSingleCategoryinProjectBySlug = async ( categorySlug: string) => {
+    const category = await prisma.category.findFirst({
+        where: { slug: categorySlug },
+        include: {
+            posts: true
+        }
+    });
+    if (!category) {
+        console.log("lado2");
+
+        throw new AppError("Category not found", 404);
+    }
+    return category;
 }
 
 
@@ -77,6 +93,7 @@ const deleteCategoryinProject = async ( categoryId: string) => {
 export default {
     getAllCategoriesinProject,
     getSingleCategoryinProject,
+    getSingleCategoryinProjectBySlug,
     addNewCategoryinProject,
     updateCategoryinProject,
     deleteCategoryinProject

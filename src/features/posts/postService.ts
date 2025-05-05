@@ -50,6 +50,20 @@ const getSinglePost = async (postId: string) => {
     return post;
 }
 
+const getSinglePostBySlug = async (postSlug: string) => {
+    const post = await prisma.post.findFirst({
+         where: { slug: postSlug },
+        include: {
+             category: true,
+              project: true
+        }});
+
+    if (!post) {
+        throw new AppError("No post found", 404);
+    }   
+    return post;
+}
+
 const addNewPost = async (data: CreatePostInterface) => {
     try {
         const newPost = await prisma.post.create({ data });
@@ -90,6 +104,7 @@ const deletePost = async ( id: string) => {
 export default {
     getAllPosts,
     getSinglePost,
+    getSinglePostBySlug,
     addNewPost,
     updatePost,
     deletePost

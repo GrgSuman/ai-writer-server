@@ -29,6 +29,22 @@ export const getSingleCategoryinProject =  expressAsyncHandler(async (req: Reque
     sendResponse({res, data: category});
 })  
 
+
+/**
+ * @route GET /api/projects/:projectId/categories/:slug
+ * @desc Get a single category in a project
+ * @access Public
+ */
+export const getSingleCategoryinProjectBySlug =  expressAsyncHandler(async (req: Request, res: Response) => {
+    const { categorySlug } = req.params;
+
+    const category = await categoryService.getSingleCategoryinProjectBySlug(categorySlug);
+    if (!category) {
+        throw new AppError("Category not found", 404);
+    }
+    sendResponse({res, data: category});
+})  
+
 /**
  * @route POST /api/projects/:projectId/categories
  * @desc Add a new category in a project

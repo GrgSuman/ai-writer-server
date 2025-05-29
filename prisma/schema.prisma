@@ -51,6 +51,8 @@ model Project {
   userId        String  // Foreign key to User
   user          User     @relation(fields: [userId], references: [id])
 
+  researchContentIdeas  ResearchContentIdeas[]
+
   @@unique([userId, name]) // Project name must be unique within a user
 }
 
@@ -92,3 +94,21 @@ model Post {
   @@unique([projectId, slug]) // Post slug must be unique within a project
 }
 
+
+model ResearchContentIdeas {
+  id          String   @id @default(uuid())  // Unique ID
+  title       String   // Post title
+  description String // Post description 
+  keywords    String // list of keywords
+  wordCount   Int
+  postFormat  String
+  whyGoodIdea String[]
+
+  projectId   String   // Foreign key to Project
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) // Timestamp for creation
+  updatedAt   DateTime @updatedAt      // Auto-updated on modification
+
+  @@unique([projectId, title]) // Post titles must be unique within a project
+}

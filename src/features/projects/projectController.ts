@@ -3,7 +3,6 @@ import expressAsyncHandler from "express-async-handler";
 import projectService from "./projectService";
 import sendResponse from "../../utils/sendResponse";
 import AppError from "../../utils/appError";
-import prisma from "../../lib/db";
 import { RequestWithUser } from "../../types/customRequest";
 /**
  * @route GET /api/projects
@@ -97,3 +96,42 @@ export const deleteProject = expressAsyncHandler(async (req: Request, res: Respo
     sendResponse({res, message: "Project deleted successfully", data: deletedProject})
 })
 
+/**
+ * @route GET /api/projects/:projectId/research-content-ideas
+ * @desc Get research content ideas for a project
+ * @access Private
+ */
+export const getResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
+    const { projectId } = req.params;
+    const researchContentIdeas = await projectService.getResearchContentIdeas(projectId);
+    sendResponse({res, data: researchContentIdeas})
+})
+
+
+/**
+ * @route POST /api/projects/:projectId/research-content-ideas
+ * @desc Add research content ideas for a project
+ * @access Private
+ */
+
+export const addResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
+    const { projectId } = req.params;
+    const { title, keywords, description, wordCount, postFormat, whyGoodIdea } = req.body;
+    if(!title || !keywords || !description || !wordCount || !postFormat || !whyGoodIdea){
+        throw new AppError("All fields are required to add research content ideas", 400);
+    }
+    if(typeof wordCount !== "number"){
+        throw new AppError("Word count must be a number", 400);
+    }
+    const researchContentIdeas = await projectService.addResearchContentIdeas(projectId, title, keywords, description, wordCount, postFormat, whyGoodIdea);
+    sendResponse({res, message: "Research content ideas added successfully", data: researchContentIdeas})
+})
+
+export const deleteResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
+    const { researchContentIdeasId } = req.params;
+    const deletedResearchContentIdeas = await projectService.deleteResearchContentIdeas(researchContentIdeasId);
+    sendResponse({res, message: "Research content ideas deleted successfully", data: deletedResearchContentIdeas})
+})
+
+
+    

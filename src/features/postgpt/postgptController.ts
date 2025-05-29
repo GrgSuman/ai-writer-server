@@ -1,11 +1,17 @@
 import { Request, Response } from "express";
 import { callGemini } from "../../lib/geminiPrompt";
-// import { GoogleGenerativeAI } from "@google/generative-ai";
 import { filterJsonString } from "../../lib/filterJson";
 import AppError from "../../utils/appError";
 import sendResponse from "../../utils/sendResponse";
 import expressAsyncHandler from "express-async-handler";
+// import postService from "../posts/postService";
+// import { Post } from "@prisma/client";
 
+/**
+ * @route POST /api/postgpt/summary
+ * @desc Generate a summary and insights from provided content
+ * @access Public
+ */
 export const generateSummary = expressAsyncHandler(async (req: Request, res: Response) => {
 
     const { content } = req.body;
@@ -26,6 +32,11 @@ export const generateSummary = expressAsyncHandler(async (req: Request, res: Res
     sendResponse({ res, data });
 })
 
+/**
+ * @route POST /api/postgpt/outline
+ * @desc Generate a detailed outline for a blog post
+ * @access Public
+ */
 export const generateOutline = async (req: Request, res: Response) => {
 
     const { title, description, keywords, wordCount, writingStyle, summaryContents } = req.body;
@@ -58,7 +69,6 @@ export const generateOutline = async (req: Request, res: Response) => {
             "success": true,
             "message": "success",
             data
-            // data:"outline"
         })
     }
     catch (e) {
@@ -69,6 +79,11 @@ export const generateOutline = async (req: Request, res: Response) => {
     }
 }
 
+/**
+ * @route POST /api/postgpt/generate
+ * @desc Generate a complete blog post with SEO optimization
+ * @access Public
+ */
 export const generateAIPost = expressAsyncHandler(async (req: Request, res: Response) => {
     const { topic, category, keyPoints, keywords, audience, goal, tone,
         format, wordCount, referenceSources, additionalInstructions } = req.body.data;
@@ -138,3 +153,140 @@ export const generateAIPost = expressAsyncHandler(async (req: Request, res: Resp
         throw new AppError("something went wrong", 400);
     }
 })
+
+/**
+ * @route POST /api/postgpt/title-ideas
+ * @desc Generate comprehensive content ideas based on keywords, including title, format, and strategy
+ * @access Public
+ */
+export const generateTitleIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
+    const { keywords } = req.body;
+
+    if (!keywords) {
+        throw new AppError("keywords are required", 400);
+    }
+
+    const prompt = `As an expert content strategist and SEO specialist, analyze these keywords: "${keywords}" and generate 5 comprehensive content ideas.
+
+    For each idea, provide a detailed analysis including:
+    1. A compelling, SEO-optimized title
+    2. Relevant keywords to target
+    3. A clear, engaging description
+    4. Recommended word count
+    5. Best content format
+    6. Why this idea would perform well
+    7. Estimated read time
+
+    Return the response in this JSON format:
+    {
+        "contentIdeas": [
+            {
+                "title": "Main title of the content",
+                "keywords": "keyword1, keyword2, keyword3",
+                "description": "Clear and engaging meta description of the content",
+                "wordCount": estimated word count in number,
+                "postFormat": "how-to, listicle, guide, case-study, etc.",
+                "whyGoodIdea": [
+                    "Reason 1 why this content would perform well",
+                    "Reason 2 for potential success",
+                    "Reason 3 for audience appeal"
+                ],
+            }
+        ]
+    }`;
+
+    try {
+        const data = await callGemini(prompt);
+        sendResponse({ res, data: filterJsonString(data) });
+        // sendResponse({ res, data: {
+        //     "contentIdeas": [
+        //         {
+        //             "title": "How to make a website",
+        //             "keywords": "website, make, website, website, website",
+        //             "description": "Clear and engaging meta description of the content",
+        //             "wordCount": 1500,
+        //             "postFormat": "how-to, listicle, guide, case-study, etc.",
+        //             "whyGoodIdea": [
+        //                 "Reason 1 why this content would perform well",
+        //                 "Reason 2 for potential success",
+        //                 "Reason 3 for audience appeal"
+        //             ],
+        //         }
+        //     ]
+        //  } });
+        
+    } catch (e) {
+        throw new AppError("Failed to generate content ideas", 400);
+    }
+});
+
+/**
+ * @route POST /api/postgpt/generate-related-ideas
+ * @desc Generate content ideas based on existing posts in the database
+ * @access Public
+ */
+// export const generateRelatedIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
+//     const { projectId } = req.params;
+    
+//     // Get existing posts from database
+//     const existingPosts = await postService.getAllPosts(projectId);
+    
+//     // Extract titles, keywords, and categories
+//     const contentAnalysis = {
+//         titles: existingPosts.map((post: Post) => post.title),
+//         keywords: existingPosts.flatMap((post: Post) => post.keywords),
+//         categories: existingPosts.map((post: Post) => post.categoryId)
+//     };
+
+//     const prompt = `As an expert content strategist, analyze these existing content pieces and generate new, related content ideas that would complement the current content strategy.
+
+//     Existing Content Analysis:
+//     Titles: ${contentAnalysis.titles.join(', ')}
+//     Keywords: ${contentAnalysis.keywords.join(', ')}
+//     Categories: ${contentAnalysis.categories.join(', ')}
+
+//     Generate 3 new content ideas that:
+//     1. Fill content gaps in the current strategy
+//     2. Build upon successful existing content
+//     3. Target underserved topics in the same space
+//     4. Create content clusters around popular topics
+
+//     For each idea, provide:
+//     {
+//         "contentIdeas": [
+//             {
+//                 "title": "Main title of the content",
+//                 "keywords": ["keyword1", "keyword2", "keyword3"],
+//                 "description": "Clear and engaging description of the content",
+//                 "wordCount": 2500,
+//                 "postFormat": "how-to | listicle | guide | case-study",
+//                 "whyGoodIdea": [
+//                     "Reason 1 why this content would perform well",
+//                     "Reason 2 for potential success",
+//                     "Reason 3 for audience appeal"
+//                 ],
+//                 "estimatedReadTime": "15 min read",
+//                 "relatedToExisting": [
+//                     {
+//                         "title": "Related existing post title",
+//                         "relationship": "How this new content relates to existing content"
+//                     }
+//                 ],
+//                 "contentCluster": "Which content cluster this belongs to"
+//             }
+//         ],
+//         "strategyInsights": {
+//             "contentGaps": "Identified gaps in current content",
+//             "opportunities": "New opportunities in the space",
+//             "trends": "Emerging trends in the topic area",
+//             "recommendations": "Strategic recommendations for content development"
+//         }
+//     }`;
+
+//     try {
+//         const data = await callGemini(prompt);
+//         sendResponse({ res, data: filterJsonString(data) });
+//     } catch (e) {
+//         throw new AppError("Failed to generate related content ideas", 400);
+//     }
+// });

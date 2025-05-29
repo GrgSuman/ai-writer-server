@@ -3,9 +3,11 @@ import dotenv from "dotenv";
 import { webContents } from "./scraper/scraper";
 import cors from 'cors'
 import logger from 'morgan'
+
 import { postgptRoute } from "./features/postgpt/postgptRoute";
 import { projectRoute } from "./features/projects/projectRoute";
 import { errorHandler } from "./middlewares/errorMiddleWare";
+
 import  postRoute  from "./features/posts/postRoutes";
 import categoryRoute from "./features/categories/categoryRoute";
 import validateProject from "./validators/validateProjectId";

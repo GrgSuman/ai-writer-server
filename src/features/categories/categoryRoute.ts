@@ -6,8 +6,10 @@ import { getAllCategoriesinProject, getSingleCategoryinProject, addNewCategoryin
 const router = express.Router({ mergeParams: true });
 
 router.get("/", getAllCategoriesinProject);
+
 router.get("/:categoryId", getSingleCategoryinProject);
 router.get("/slug/:categorySlug", getSingleCategoryinProjectBySlug);
+
 router.post("/", addNewCategoryinProject);
 router.put("/:categoryId", updateCategoryinProject);
 router.delete("/:categoryId", deleteCategoryinProject);

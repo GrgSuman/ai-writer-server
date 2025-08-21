@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WRITECMS DOCS</title>
+    <style>
+        :root { color-scheme: light dark; }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; }
+        header { padding: 20px; background: linear-gradient(90deg,#111,#333); color: #fff; }
+        main {  margin: 0 auto; padding:24px; }
+        .group { margin-bottom: 28px; }
+        .group h2 { margin: 16px 0 8px; }
+        .route { border: 1px solid #4443; border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+        .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+        .method { font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+        .GET { background: #22c55e33; color: #16a34a; border: 1px solid #22c55e55; }
+        .POST { background: #60a5fa33; color: #2563eb; border: 1px solid #60a5fa55; }
+        .PUT { background: #f59e0b33; color: #b45309; border: 1px solid #f59e0b55; }
+        .DELETE { background: #ef444433; color: #dc2626; border: 1px solid #ef444455; }
+        .path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.95rem; }
+        .needs, .returns, .notes { margin: 6px 0; }
+        a { color: inherit; }
+        .copy { cursor: pointer; font-size: 12px; opacity: 0.7; margin-left: auto; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>WRITECMS API Documentation</h1>
+        <p>Base URL: <code>http://localhost:8000/api/v1</code></p>
+    </header>
+    <main>
+        <div id="docs"></div>
+    </main>
+    <script type="module" src="/docs/routes.js"></script>
+    <script>
+        function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text) e.textContent = text; return e; }
+        function copy(text){ navigator.clipboard.writeText(text).catch(()=>{}); }
+        function render(){
+            const root = document.getElementById('docs');
+            root.innerHTML = '';
+            (window.apiDocs||[]).forEach(group => {
+                const wrap = el('section','group');
+                const h = el('h2', null, group.group);
+                const p = el('p', null, group.description||'');
+                wrap.appendChild(h); wrap.appendChild(p);
+                (group.routes||[]).forEach(r => {
+                    const card = el('div','route');
+                    const meta = el('div','meta');
+                    const m = el('span','method ' + r.method, r.method);
+                    const path = el('code','path', r.path);
+                    const copyBtn = el('span','copy','Copy URL');
+                    copyBtn.onclick = () => copy(r.fullPath);
+                    meta.appendChild(m); meta.appendChild(path); meta.appendChild(copyBtn);
+                    const needs = el('div','needs','Needs: ' + (r.needs||'-'));
+                    const returns = el('div','returns','Returns: ' + (r.returns||'-'));
+                    const notes = el('div','notes','Notes: ' + (r.notes||'-'));
+                    card.appendChild(meta); card.appendChild(needs); card.appendChild(returns); card.appendChild(notes);
+                    wrap.appendChild(card);
+                });
+                root.appendChild(wrap);
+            });
+        }
+        window.addEventListener('DOMContentLoaded', render);
+    </script>
+</body>
+</html>

@@ -3,6 +3,11 @@ import prisma from "../../lib/db";
 import { slugify } from "../../lib/slugify";
 import AppError from "../../utils/appError";
 
+// Get all categories in a project
+// This function is used to get all categories in a project
+// It takes a projectId as a parameter and returns all categories in the project
+// It returns all categories in the project
+// @route GET /api/projects/:projectId/categories
 const getAllCategoriesinProject = async (projectId: string) => {
         const categories = await prisma.category.findMany({
              where: { projectId },
@@ -18,6 +23,11 @@ const getAllCategoriesinProject = async (projectId: string) => {
         return categories;
 }
 
+// Get a single category in a project by categoryId
+// This function is used to get a single category in a project by categoryId
+// It takes a categoryId as a parameter and returns a single category in the project
+// It returns a single category in the project
+// @route GET /api/projects/:projectId/categories/:categoryId
 const getSingleCategoryinProject = async ( categoryId: string) => {
         const category = await prisma.category.findUnique({
             where: { id: categoryId },
@@ -26,12 +36,16 @@ const getSingleCategoryinProject = async ( categoryId: string) => {
             }
         });
         if (!category) {
-            console.log("lado");
             throw new AppError("Category not found", 404);
         }
         return category;
 }
 
+// Get a single category in a project by slug
+// This function is used to get a single category in a project by slug
+// It takes a categorySlug as a parameter and returns a single category in the project
+// It returns a single category in the project
+// @route GET /api/projects/:projectId/categories/slug/:categorySlug
 const getSingleCategoryinProjectBySlug = async ( categorySlug: string) => {
     const category = await prisma.category.findFirst({
         where: { slug: categorySlug },
@@ -40,8 +54,6 @@ const getSingleCategoryinProjectBySlug = async ( categorySlug: string) => {
         }
     });
     if (!category) {
-        console.log("lado2");
-
         throw new AppError("Category not found", 404);
     }
     return category;
@@ -65,6 +77,11 @@ const addNewCategoryinProject = async (projectId: string, name: string) => {
     }
 }
 
+// Update a category in a project
+// This function is used to update a category in a project
+// It takes a categoryId and name as parameters and updates the category
+// It returns the updated category
+// @route PUT /api/projects/:projectId/categories/:categoryId
 const updateCategoryinProject = async (categoryId: string, name: string) => {
     try{
         const category = await prisma.category.update({ where: { id: categoryId }, data: { name, slug: slugify(name) } });
@@ -82,6 +99,11 @@ const updateCategoryinProject = async (categoryId: string, name: string) => {
     }           
 }
 
+// Delete a category in a project
+// This function is used to delete a category in a project
+// It takes a categoryId as a parameter and deletes the category
+// It returns the deleted category
+// @route DELETE /api/projects/:projectId/categories/:categoryId
 const deleteCategoryinProject = async ( categoryId: string) => {
     const category = await prisma.category.delete({ where: { id: categoryId } });
     if (!category) {

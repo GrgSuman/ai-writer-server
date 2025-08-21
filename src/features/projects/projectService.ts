@@ -2,27 +2,11 @@ import { Prisma } from "@prisma/client";
 import prisma from "../../lib/db";
 import AppError from "../../utils/appError";
 
-const getProjects = async () => {
-    const projects = await prisma.project.findMany({
-        where: {
-            isActive: true
-        },
-        include: {
-            categorys: true,
-            _count: {
-                select: { posts: true }
-            }
-        }
-    });
-
-    if (!projects) {
-        throw new AppError("No projects found", 404);
-    }
-
-
-    return projects
-}
-
+// Get all projects of a user
+// This function is used to get all projects of a user
+// It takes a user ID as a parameter and returns all projects of the user
+// It returns all projects of the user
+// @route GET /api/projects
 const getProjectsByUserId = async (userId: string) => {
     const projects = await prisma.project.findMany({
         where: {
@@ -45,24 +29,11 @@ const getProjectsByUserId = async (userId: string) => {
     return projects
 }
 
-
-const getSingleProjectById = async (id: string) => {
-    const projects = await prisma.project.findUnique({
-        where: { isActive: true, id },
-        include: {
-            categorys: true,
-            _count: {
-                select: { posts: true }
-            }
-        }
-
-    });
-    if (!projects) {
-        throw new AppError("No projects found", 404);
-    }
-    return projects;
-}
-
+// Get a single project by projectId and userId
+// This function is used to get a single project by projectId and userId
+// It takes a projectId and userId as parameters and returns a single project
+// It returns a single project
+// @route GET /api/projects/:projectId
 const getSingleProjectByIdandUser = async (projectId: string, userId: string) => {
     const projects = await prisma.project.findUnique({
         where: { isActive: true, id: projectId, userId },
@@ -80,6 +51,11 @@ const getSingleProjectByIdandUser = async (projectId: string, userId: string) =>
     return projects;
 }
 
+// Add a new project
+// This function is used to add a new project
+// It takes a name, gradientStart, gradientEnd and userId as parameters and adds a new project
+// It returns the new project
+// @route POST /api/projects
 const addNewProject = async (name: string, gradientStart: string, gradientEnd: string, userId: string) => {
     try {
         const project = await prisma.project.create({ data: { name, gradientStart, gradientEnd, userId } });
@@ -97,6 +73,11 @@ const addNewProject = async (name: string, gradientStart: string, gradientEnd: s
     }
 }
 
+// Update a project
+// This function is used to update a project
+// It takes a projectId, name, description and systemPrompt as parameters and updates the project
+// It returns the updated project
+// @route PUT /api/projects/:projectId
 const updateProject = async (id: string, name: string, description: string, systemPrompt: string) => {
     try {
         const project = await prisma.project.update({
@@ -122,6 +103,11 @@ const updateProject = async (id: string, name: string, description: string, syst
 
 }
 
+// Delete a project
+// This function is used to delete a project
+// It takes a projectId as a parameter and deletes the project
+// It returns the deleted project
+// @route DELETE /api/projects/:projectId
 const deleteProject = async (id: string) => {
     const project = await prisma.project.delete({ where: { id } });
     if (!project) {
@@ -130,79 +116,12 @@ const deleteProject = async (id: string) => {
     return project
 }
 
-
-const getResearchContentIdeas = async (projectId: string) => {
-    try {
-        const researchContentIdeas = await prisma.researchContentIdeas.findMany({
-            where: {
-                projectId: projectId
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
-
-        return researchContentIdeas;
-    } catch (error) {
-        throw new AppError("Error fetching research content ideas", 500);
-    }
-}
-
-
-const addResearchContentIdeas = async (projectId: string, title: string, keywords: string, description: string, wordCount: number, postFormat: string, whyGoodIdea: string[]) => {
-    try {
-        // Check for duplicate title
-        const existingIdea = await prisma.researchContentIdeas.findFirst({
-            where: {
-                projectId,
-                title
-            }
-        });
-
-        if (existingIdea) {
-            throw new AppError("Research content idea with this title already exists", 400);
-        }
-
-        const researchContentIdeas = await prisma.researchContentIdeas.create({
-            data: {
-                projectId,
-                title,
-                keywords,
-                description,
-                wordCount,
-                postFormat,
-                whyGoodIdea
-            }
-        });
-        return researchContentIdeas;
-    } catch (error) {
-        if (error instanceof AppError) {
-            throw error;
-        }
-        throw new AppError("Error creating research content ideas", 500);
-    }
-}
-
-
-const deleteResearchContentIdeas = async (id: string) => {
-    const researchContentIdeas = await prisma.researchContentIdeas.delete({ where: { id } });
-    if (!researchContentIdeas) {
-        throw new AppError("Error deleting research content ideas", 404);
-    }
-    return researchContentIdeas;
-}
-
 const projectService = {
-    getProjects,
-    getSingleProjectById,
     getProjectsByUserId,
     getSingleProjectByIdandUser,
     addNewProject,
     updateProject,
-    deleteProject,
-    getResearchContentIdeas,
-    addResearchContentIdeas,
-    deleteResearchContentIdeas
+    deleteProject
 }
 
 export default projectService

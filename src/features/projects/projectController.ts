@@ -6,11 +6,10 @@ import AppError from "../../utils/appError";
 import { RequestWithUser } from "../../types/customRequest";
 /**
  * @route GET /api/projects
- * @desc Get all projects
- * @access Public
+ * @desc Get all projects of a user
+ * @access Private
  */
 export const getAllProjects =  expressAsyncHandler(async (req: RequestWithUser, res: Response) => {
-    // const projects = await projectService.getProjects();
     const projects = await projectService.getProjectsByUserId(req.userId as string);
     sendResponse({res, data: projects})
 })
@@ -18,11 +17,10 @@ export const getAllProjects =  expressAsyncHandler(async (req: RequestWithUser, 
 /**
  * @route GET /api/projects/:projectId
  * @desc Get a single project by projectId
- * @access Public
+ * @access Private
  */
 export const getSingleProject =  expressAsyncHandler(async (req: RequestWithUser, res: Response) => {
     const { projectId } = req.params;
-    // const project = await projectService.getSingleProjectById(projectId);
     const project = await projectService.getSingleProjectByIdandUser(projectId, req.userId as string);
     sendResponse({res, data: project})
 })
@@ -30,7 +28,7 @@ export const getSingleProject =  expressAsyncHandler(async (req: RequestWithUser
 /**
  * @route POST /api/projects
  * @desc Add a new project
- * @access Public
+ * @access Private
  */
 export const addNewProject = expressAsyncHandler(async (req: RequestWithUser, res: Response) => {
     const userId = req.userId as string;
@@ -51,11 +49,6 @@ export const addNewProject = expressAsyncHandler(async (req: RequestWithUser, re
         throw new AppError("Project Name is required", 400);
     }
 
-    // const projectExists = await prisma.project.findFirst({ where: { name } });
-    // if (projectExists) {
-    //     throw new AppError("Project with this name already exists", 400);
-    // }
-
     const gradientStart = softColorPalettes[Math.floor(Math.random() * softColorPalettes.length)].start;    
     const gradientEnd = softColorPalettes[Math.floor(Math.random() * softColorPalettes.length)].end;
 
@@ -66,7 +59,7 @@ export const addNewProject = expressAsyncHandler(async (req: RequestWithUser, re
 /**
  * @route PUT /api/projects/:id
  * @desc Update a project
- * @access Public
+ * @access Private
  */
 export const updateProject = expressAsyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
@@ -76,11 +69,6 @@ export const updateProject = expressAsyncHandler(async (req: Request, res: Respo
         throw new AppError("all fields are required to update project", 400);
     }
 
-    // const projectExists = await prisma.project.findFirst({ where: { name } });
-    // if (projectExists) {
-    //     throw new AppError("Project with this name already exists", 400);
-    // }
-
     const updatedProject = await projectService.updateProject(projectId, name, description, systemPrompt);
     sendResponse({res, message: "Project updated successfully", data: updatedProject})
 })
@@ -88,50 +76,11 @@ export const updateProject = expressAsyncHandler(async (req: Request, res: Respo
 /**
  * @route DELETE /api/projects/:id
  * @desc Delete a project
- * @access Public
+ * @access Private
  */
 export const deleteProject = expressAsyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
     const  deletedProject =  await projectService.deleteProject(projectId);
     sendResponse({res, message: "Project deleted successfully", data: deletedProject})
 })
-
-/**
- * @route GET /api/projects/:projectId/research-content-ideas
- * @desc Get research content ideas for a project
- * @access Private
- */
-export const getResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
-    const { projectId } = req.params;
-    const researchContentIdeas = await projectService.getResearchContentIdeas(projectId);
-    sendResponse({res, data: researchContentIdeas})
-})
-
-
-/**
- * @route POST /api/projects/:projectId/research-content-ideas
- * @desc Add research content ideas for a project
- * @access Private
- */
-
-export const addResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
-    const { projectId } = req.params;
-    const { title, keywords, description, wordCount, postFormat, whyGoodIdea } = req.body;
-    if(!title || !keywords || !description || !wordCount || !postFormat || !whyGoodIdea){
-        throw new AppError("All fields are required to add research content ideas", 400);
-    }
-    if(typeof wordCount !== "number"){
-        throw new AppError("Word count must be a number", 400);
-    }
-    const researchContentIdeas = await projectService.addResearchContentIdeas(projectId, title, keywords, description, wordCount, postFormat, whyGoodIdea);
-    sendResponse({res, message: "Research content ideas added successfully", data: researchContentIdeas})
-})
-
-export const deleteResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
-    const { researchContentIdeasId } = req.params;
-    const deletedResearchContentIdeas = await projectService.deleteResearchContentIdeas(researchContentIdeasId);
-    sendResponse({res, message: "Research content ideas deleted successfully", data: deletedResearchContentIdeas})
-})
-
-
     

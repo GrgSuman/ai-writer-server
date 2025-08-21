@@ -14,6 +14,7 @@ import validateProject from "./validators/validateProjectId";
 import authRoutes from "./features/auth/authRoute";
 import cookieParser from "cookie-parser";
 import { verifyUser } from "./middlewares/verifyUser";
+import { researchRoute } from "./features/research/researchRoute";
 
 
 dotenv.config();
@@ -37,13 +38,14 @@ app.use("/api/auth", authRoutes);
 
 // projects api routes
 app.use("/api/projects", verifyUser, projectRoute);
-// categories api under project
+
+// (categories,posts,research) under a specific project
 app.use("/api/projects/:projectId/categories", verifyUser, validateProject, categoryRoute);
-// posts api routes under project
-app.use('/api/projects/:projectId/posts',verifyUser, validateProject, postRoute); // Posts under a specific project
+app.use('/api/projects/:projectId/posts',verifyUser, validateProject, postRoute); 
+app.use('/api/projects/:projectId/research-content-ideas',verifyUser, validateProject, researchRoute);
 
 // postgpt api routes
-app.use("/api/postgpt", postgptRoute);
+app.use("/api/postgpt", verifyUser, postgptRoute);
 
 app.get("/", (req, res) => {
     res.json({
@@ -54,7 +56,7 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 8000
 
-app.get("/scrape", async (req, res) => {
+app.get("/scrape", verifyUser, async (req, res) => {
     const url = req.query.url as string;
     if (!url) {
         res.status(400).json({

@@ -7,7 +7,7 @@ import sendResponse from "../../utils/sendResponse";
 import AppError from "../../utils/appError";
 /**
  * @route GET /api/projects/:projectId/posts
- * @desc Get all posts in a project
+ * @desc Get all posts in a project including category and project
  * @access Public
  */
 export const getAllPosts = expressAsyncHandler(async (req: Request, res: Response) => {
@@ -19,8 +19,8 @@ export const getAllPosts = expressAsyncHandler(async (req: Request, res: Respons
 
 /**
  * @route GET /api/projects/:projectId/posts/:postId
- * @desc Get a single post in a project
- * @access Public
+ * @desc Get a single post in a project including category and project  
+ * @access Private
  */
 export const getSinglePost = expressAsyncHandler(async (req: CustomRequest, res: Response) => {
     const { postId } = req.params;
@@ -30,8 +30,8 @@ export const getSinglePost = expressAsyncHandler(async (req: CustomRequest, res:
 
 /**
  * @route GET /api/projects/:projectId/posts/slug/:postSlug
- * @desc Get a single post in a project
- * @access Public
+ * @desc Get a single post in a project including category and project
+ * @access Private
  */
 export const getSinglePostBySlug = expressAsyncHandler(async (req: CustomRequest, res: Response) => {
     const { postSlug } = req.params;
@@ -43,7 +43,7 @@ export const getSinglePostBySlug = expressAsyncHandler(async (req: CustomRequest
 /**
  * @route POST /api/projects/:projectId/posts
  * @desc Add a new post in a project
- * @access Public
+ * @access Private
  */
 export const addNewPost = expressAsyncHandler(async (req: Request, res: Response) => {
     const postData = req.body;
@@ -88,7 +88,7 @@ export const addNewPost = expressAsyncHandler(async (req: Request, res: Response
 /**
  * @route PUT /api/projects/:projectId/posts/:postId
  * @desc Update post in a project and category
- * @access Public
+ * @access Private
  */
 export const updatePost = expressAsyncHandler(async (req: CustomRequest, res: Response) => {
     const { postId } = req.params;
@@ -133,7 +133,7 @@ export const updatePost = expressAsyncHandler(async (req: CustomRequest, res: Re
 /**
  * @route DELETE /api/projects/:projectId/posts/:postId
  * @desc Delete post in a project
- * @access Public
+ * @access Private
  */
 export const deletePost = expressAsyncHandler(async (req: Request, res: Response) => {
     const { postId } = req.params;

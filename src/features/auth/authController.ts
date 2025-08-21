@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken"
 import { RequestWithUser } from "../../types/customRequest"
 import crypto from "crypto"
 import { OAuth2Client } from "google-auth-library"
+import { Prisma } from "@prisma/client"
 
 
 // Login and Signup user with Google
@@ -102,6 +103,11 @@ export const generateAPIKey = expressAsyncHandler(async (req: RequestWithUser, r
         sendResponse({ res, message: "API key generated successfully", data: apiKey })
     }
     catch(e){
+        if(e instanceof Prisma.PrismaClientKnownRequestError){
+            if(e.code === "P2002"){
+                throw new AppError("API key already exists", 400)
+            }
+        }
         throw new AppError("API key generation failed", 500)
     }
 })

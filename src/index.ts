@@ -34,18 +34,18 @@ app.use(logger('dev'));
 
 
 //auth routes
-app.use("/api/auth", authRoutes);
+app.use("/api/v1/auth", authRoutes);
 
 // projects api routes
-app.use("/api/projects", verifyUser, projectRoute);
+app.use("/api/v1/projects", verifyUser, projectRoute);
 
 // (categories,posts,research) under a specific project
-app.use("/api/projects/:projectId/categories", verifyUser, validateProject, categoryRoute);
-app.use('/api/projects/:projectId/posts',verifyUser, validateProject, postRoute); 
-app.use('/api/projects/:projectId/research-content-ideas',verifyUser, validateProject, researchRoute);
+app.use("/api/v1/projects/:projectId/categories", verifyUser, validateProject, categoryRoute);
+app.use('/api/v1/projects/:projectId/posts',verifyUser, validateProject, postRoute); 
+app.use('/api/v1/projects/:projectId/research-content-ideas',verifyUser, validateProject, researchRoute);
 
 // postgpt api routes
-app.use("/api/postgpt", verifyUser, postgptRoute);
+app.use("/api/v1/postgpt", verifyUser, postgptRoute);
 
 app.get("/", (req, res) => {
     res.json({

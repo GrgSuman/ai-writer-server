@@ -11,7 +11,6 @@ import AppError from "../../utils/appError";
  */
 export const getResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
-    console.log(projectId);
     const researchContentIdeas = await researchService.getResearchContentIdeas(projectId);
     sendResponse({res, data: researchContentIdeas})
 })

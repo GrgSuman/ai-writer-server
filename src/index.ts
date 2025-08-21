@@ -15,6 +15,7 @@ import authRoutes from "./features/auth/authRoute";
 import cookieParser from "cookie-parser";
 import { verifyUser } from "./middlewares/verifyUser";
 import { researchRoute } from "./features/research/researchRoute";
+import path from "path";
 
 
 dotenv.config();
@@ -47,10 +48,17 @@ app.use('/api/v1/projects/:projectId/research-content-ideas',verifyUser, validat
 // postgpt api routes
 app.use("/api/v1/postgpt", verifyUser, postgptRoute);
 
+// Serves /docs/* from the src/docs folder
+app.use('/docs', express.static(path.join(__dirname, 'docs'), { index: 'index.html' }));
+
 app.get("/", (req, res) => {
     res.json({
         "message": "Hello World"
     });
+})
+
+app.get("/writecms-docs", (req, res) => {
+    res.sendFile(path.join(__dirname, "docs", "index.html"));
 })
 
 

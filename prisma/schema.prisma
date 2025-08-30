@@ -41,6 +41,7 @@ model Project {
   isActive        Boolean @default(true) // Active status
   gradientStart   String? //card color for project listings
   gradientEnd     String? //card color gradiend (they will be set automatically)
+  emoji           String?
 
   posts           Post[] // Relation to Posts
   categorys       Category[] // Relation to Category

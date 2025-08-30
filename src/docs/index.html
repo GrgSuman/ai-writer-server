@@ -8,7 +8,51 @@
         :root { color-scheme: light dark; }
         body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; }
         header { padding: 20px; background: linear-gradient(90deg,#111,#333); color: #fff; }
-        main {  margin: 0 auto; padding:24px; }
+        main { margin: 0 auto; padding: 24px; }
+        
+        /* Tab Styles */
+        .tabs-container { margin-bottom: 28px; }
+        .tabs-header { 
+            display: flex; 
+            border-bottom: 2px solid #4443; 
+            margin-bottom: 20px;
+            overflow-x: auto;
+            gap: 2px;
+        }
+        .tab-button { 
+            background: #3333; 
+            border: none; 
+            padding: 12px 20px; 
+            color: black; 
+            cursor: pointer; 
+            border-radius: 8px 8px 0 0;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .tab-button:hover { 
+            background: #4444; 
+            color: #fff; 
+        }
+        .tab-button.active { 
+            background: #2563eb; 
+            color: #fff; 
+            border-bottom: 2px solid #2563eb;
+            margin-bottom: -2px;
+        }
+        .tab-content { 
+            display: none; 
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active { 
+            display: block; 
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .group { margin-bottom: 28px; }
         .group h2 { margin: 16px 0 8px; }
         .route { border: 1px solid #4443; border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
@@ -22,6 +66,19 @@
         .needs, .returns, .notes { margin: 6px 0; }
         a { color: inherit; }
         .copy { cursor: pointer; font-size: 12px; opacity: 0.7; margin-left: auto; }
+        .copy:hover { opacity: 1; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tabs-header { 
+                flex-wrap: wrap; 
+                gap: 4px;
+            }
+            .tab-button { 
+                padding: 10px 16px; 
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -36,15 +93,61 @@
     <script>
         function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text) e.textContent = text; return e; }
         function copy(text){ navigator.clipboard.writeText(text).catch(()=>{}); }
+        
+        function createTabButton(groupName, isActive = false) {
+            const button = el('button', `tab-button ${isActive ? 'active' : ''}`, groupName);
+            button.onclick = () => switchTab(groupName);
+            return button;
+        }
+        
+        function switchTab(groupName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${groupName}"]`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelector(`[data-content="${groupName}"]`).classList.add('active');
+        }
+        
         function render(){
             const root = document.getElementById('docs');
             root.innerHTML = '';
-            (window.apiDocs||[]).forEach(group => {
-                const wrap = el('section','group');
-                const h = el('h2', null, group.group);
-                const p = el('p', null, group.description||'');
-                wrap.appendChild(h); wrap.appendChild(p);
-                (group.routes||[]).forEach(r => {
+            
+            if (!window.apiDocs || window.apiDocs.length === 0) {
+                root.innerHTML = '<p>No API documentation available.</p>';
+                return;
+            }
+            
+            // Create tabs container
+            const tabsContainer = el('div', 'tabs-container');
+            const tabsHeader = el('div', 'tabs-header');
+            
+            // Create tab buttons and content
+            window.apiDocs.forEach((group, index) => {
+                const isActive = index === 0; // First tab is active by default
+                
+                // Create tab button
+                const tabButton = createTabButton(group.group, isActive);
+                tabButton.setAttribute('data-tab', group.group);
+                tabsHeader.appendChild(tabButton);
+                
+                // Create tab content
+                const tabContent = el('div', `tab-content ${isActive ? 'active' : ''}`);
+                tabContent.setAttribute('data-content', group.group);
+                
+                // Add group description
+                if (group.description) {
+                    const description = el('p', null, group.description);
+                    tabContent.appendChild(description);
+                }
+                
+                // Add routes
+                (group.routes || []).forEach(r => {
                     const card = el('div','route');
                     const meta = el('div','meta');
                     const m = el('span','method ' + r.method, r.method);
@@ -56,11 +159,16 @@
                     const returns = el('div','returns','Returns: ' + (r.returns||'-'));
                     const notes = el('div','notes','Notes: ' + (r.notes||'-'));
                     card.appendChild(meta); card.appendChild(needs); card.appendChild(returns); card.appendChild(notes);
-                    wrap.appendChild(card);
+                    tabContent.appendChild(card);
                 });
-                root.appendChild(wrap);
+                
+                tabsContainer.appendChild(tabContent);
             });
+            
+            tabsContainer.insertBefore(tabsHeader, tabsContainer.firstChild);
+            root.appendChild(tabsContainer);
         }
+        
         window.addEventListener('DOMContentLoaded', render);
     </script>
 </body>

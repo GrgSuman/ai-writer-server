@@ -16,6 +16,8 @@ import cookieParser from "cookie-parser";
 import { verifyUser } from "./middlewares/verifyUser";
 import { researchRoute } from "./features/research/researchRoute";
 import path from "path";
+import aiRoutes from "./features/ai/ai.routes";
+import { googleRelatedQueries, googleTrendsData } from "./lib/ai/tools";
 
 
 dotenv.config();
@@ -48,12 +50,19 @@ app.use('/api/v1/projects/:projectId/research-content-ideas',verifyUser, validat
 // postgpt api routes
 app.use("/api/v1/postgpt", verifyUser, postgptRoute);
 
+// ai api routes
+app.use("/api/v1/ai", aiRoutes);
+
 // Serves /docs/* from the src/docs folder
 app.use('/docs', express.static(path.join(__dirname, 'docs'), { index: 'index.html' }));
 
-app.get("/", (req, res) => {
+app.get("/",async (req, res) => {
+    const keywords = ['javascript', 'python','cv','resume builder']
+    // const data = await googleTrendsData()
+    const data = await googleRelatedQueries(keywords)
     res.json({
-        "message": "Hello World"
+        "message": "Hello World",
+        "data": data
     });
 })
 

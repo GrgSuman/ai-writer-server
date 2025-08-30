@@ -12,12 +12,12 @@ const getProjectsByUserId = async (userId: string) => {
         where: {
             isActive: true,
             userId
-        },
+            },
         include: {
             categorys: true,
             _count: {
                 select: { posts: true }
-            }
+            },
         }
     });
 
@@ -56,9 +56,9 @@ const getSingleProjectByIdandUser = async (projectId: string, userId: string) =>
 // It takes a name, gradientStart, gradientEnd and userId as parameters and adds a new project
 // It returns the new project
 // @route POST /api/projects
-const addNewProject = async (name: string, gradientStart: string, gradientEnd: string, userId: string) => {
+const addNewProject = async (name: string, gradientStart: string, gradientEnd: string, userId: string, emoji: string) => {
     try {
-        const project = await prisma.project.create({ data: { name, gradientStart, gradientEnd, userId } });
+        const project = await prisma.project.create({ data: { name, gradientStart, gradientEnd, userId, emoji } });
         if (!project) {
             throw new AppError("Error adding project", 404);
         }
@@ -78,14 +78,13 @@ const addNewProject = async (name: string, gradientStart: string, gradientEnd: s
 // It takes a projectId, name, description and systemPrompt as parameters and updates the project
 // It returns the updated project
 // @route PUT /api/projects/:projectId
-const updateProject = async (id: string, name: string, description: string, systemPrompt: string) => {
+const updateProject = async (id: string, name: string, description: string) => {
     try {
         const project = await prisma.project.update({
             where: { id },
             data: {
                 name,
-                description,
-                systemPrompt
+                description
             }
         });
 

@@ -59,7 +59,11 @@ const getSingleCategoryinProjectBySlug = async ( categorySlug: string) => {
     return category;
 }
 
-
+// Add a new category in a project
+// This function is used to add a new category in a project
+// It takes a projectId and name as parameters and adds the category
+// It returns the added category
+// @route POST /api/projects/:projectId/categories
 const addNewCategoryinProject = async (projectId: string, name: string) => {
     try{
         const category = await prisma.category.create({ data: { projectId, name, slug: slugify(name) } });  
@@ -67,6 +71,29 @@ const addNewCategoryinProject = async (projectId: string, name: string) => {
             throw new AppError("Failed to add category", 400);
         }
         return category;
+    }catch(error){
+        if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                throw new AppError("Category with this name already exists", 400);
+            }
+        }
+        throw new AppError("Failed to add category", 400);
+    }
+}
+
+
+// Add a new category in a project
+// This function is used to add multiple categories in a project
+// It takes a projectId and name as parameters and adds the categories
+// It returns the added category
+// @route POST /api/projects/:projectId/categories/multiple
+const addMultipleCategoriesinProject = async (projectId: string, names: string[]) => {
+    try{
+        const categories = await prisma.category.createMany({ data: names.map(name => ({ projectId, name, slug: slugify(name) })) });
+        if (!categories) {
+            throw new AppError("Failed to add categories", 400);
+        }
+        return categories;
     }catch(error){
         if(error instanceof Prisma.PrismaClientKnownRequestError){
             if (error.code === 'P2002') {
@@ -117,6 +144,7 @@ export default {
     getSingleCategoryinProject,
     getSingleCategoryinProjectBySlug,
     addNewCategoryinProject,
+    addMultipleCategoriesinProject,
     updateCategoryinProject,
     deleteCategoryinProject
 }

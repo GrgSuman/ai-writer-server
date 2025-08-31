@@ -1,7 +1,6 @@
 import { chatModel } from "../../lib/ai/models";
-import { brainstormContentPrompt, emojiPrompt, enhanceProjectDescriptionPrompt, recommendCategoriesPrompt } from "../../lib/ai/prompts";
-import { brainstormContentSchema, recommendCategoriesSchema } from "../../lib/ai/schemas";
-import { BrainstormInput } from "../../lib/ai/types";
+import { emojiPrompt, enhanceProjectDescriptionPrompt, finalContentIdeasPrompt, keywordsResearchPrompt, recommendCategoriesPrompt } from "../../lib/ai/prompts";
+import { finalContentIdeasSchema, keywordsResearchSchema, recommendCategoriesSchema } from "../../lib/ai/schemas";
 import AppError from "../../utils/appError";
 
 // Get emoji based on text
@@ -44,16 +43,31 @@ export const generateCategories = async (description: string) => {
     return categories
 }
 
+// Generate keywords
+// @param context: string
+// @returns keywords: {keyword: string}
+export const generateKeywords = async (context: string, query: string) => {
+    if (!context) {
+        throw new AppError("Context is required", 400);
+    }
+    const chain = keywordsResearchPrompt.pipe(chatModel.withStructuredOutput(keywordsResearchSchema))
+    const keywords = await chain.invoke({
+        blog_overview: context,
+        user_query: query
+    })
+    return keywords
+}
 
 // Brainstorm content
 // @param description: string
 // @returns brainstormContent: {category: string, isExisting: boolean, posts: {title: string, keywords: string[], description: string, audience: string, tone: string, length: string}[]}
-export const brainstormContent = async ({description, categoriesWithPosts, query}: BrainstormInput) => {
-    const chain = brainstormContentPrompt.pipe(chatModel.withStructuredOutput(brainstormContentSchema))
+export const brainstormContent = async ({project_overview, primary_keywords_trends, longtail_keywords_trends, user_query}:{project_overview: string, primary_keywords_trends: string, longtail_keywords_trends: string, user_query: string}) => {
+    const chain = finalContentIdeasPrompt.pipe(chatModel.withStructuredOutput(finalContentIdeasSchema))
     const brainstormContent = await chain.invoke({
-        description:description,
-        categoriesWithPosts:categoriesWithPosts,
-        query:query
+       project_overview,
+       primary_keywords_trends,
+       longtail_keywords_trends,
+       user_query
     })
     return brainstormContent
 }

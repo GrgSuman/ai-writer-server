@@ -24,14 +24,28 @@ export const getResearchContentIdeas = expressAsyncHandler(async (req: Request, 
 
 export const addResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
-    const { title, keywords, description, wordCount, postFormat, whyGoodIdea } = req.body;
-    if(!title || !keywords || !description || !wordCount || !postFormat || !whyGoodIdea){
+    const { title, description, keywords, audience, tone, length, searchIntent, suggestedCategory, trendInsights } = req.body;
+    
+    if(!title || !description || !keywords || !audience || !tone || !length || !searchIntent || !suggestedCategory || !trendInsights){
         throw new AppError("All fields are required to add research content ideas", 400);
     }
-    if(typeof wordCount !== "number"){
-        throw new AppError("Word count must be a number", 400);
+    
+    if(!Array.isArray(keywords)){
+        throw new AppError("Keywords must be an array of strings", 400);
     }
-    const researchContentIdeas = await researchService.addResearchContentIdeas(projectId, title, keywords, description, wordCount, postFormat, whyGoodIdea);
+    
+    const researchContentIdeas = await researchService.addResearchContentIdeas(
+        projectId, 
+        title, 
+        description, 
+        keywords, 
+        audience, 
+        tone, 
+        length, 
+        searchIntent, 
+        suggestedCategory, 
+        trendInsights
+    );
     sendResponse({res, message: "Research content ideas added successfully", data: researchContentIdeas})
 })
 
@@ -43,14 +57,28 @@ export const addResearchContentIdeas = expressAsyncHandler(async (req: Request, 
 
 export const updateResearchContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
     const { researchContentIdeasId } = req.params;
-    const { title, keywords, description, wordCount, postFormat, whyGoodIdea } = req.body;
-    if(!title || !keywords || !description || !wordCount || !postFormat || !whyGoodIdea){
+    const { title, description, keywords, audience, tone, length, searchIntent, suggestedCategory, trendInsights } = req.body;
+    
+    if(!title || !description || !keywords || !audience || !tone || !length || !searchIntent || !suggestedCategory || !trendInsights){
         throw new AppError("All fields are required to update research content ideas", 400);
     }
-    if(typeof wordCount !== "number"){
-        throw new AppError("Word count must be a number", 400);
+    
+    if(!Array.isArray(keywords)){
+        throw new AppError("Keywords must be an array of strings", 400);
     }
-    const researchContentIdeas = await researchService.updateResearchContentIdeas(researchContentIdeasId, title, keywords, description, wordCount, postFormat, whyGoodIdea);
+    
+    const researchContentIdeas = await researchService.updateResearchContentIdeas(
+        researchContentIdeasId, 
+        title, 
+        description, 
+        keywords, 
+        audience, 
+        tone, 
+        length, 
+        searchIntent, 
+        suggestedCategory, 
+        trendInsights
+    );
     sendResponse({res, message: "Research content ideas updated successfully", data: researchContentIdeas})
 })
 

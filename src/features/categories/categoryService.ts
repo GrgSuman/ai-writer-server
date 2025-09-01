@@ -9,6 +9,15 @@ import AppError from "../../utils/appError";
 // It returns all categories in the project
 // @route GET /api/projects/:projectId/categories
 const getAllCategoriesinProject = async (projectId: string) => {
+        // First validate that the project exists
+        const projectExists = await prisma.project.findUnique({
+            where: { id: projectId, isActive: true }
+        });
+        
+        if (!projectExists) {
+            throw new AppError("Project not found", 404);
+        }
+
         const categories = await prisma.category.findMany({
              where: { projectId },
              include: {
@@ -17,9 +26,7 @@ const getAllCategoriesinProject = async (projectId: string) => {
                 }
              }
         });
-        if (!categories) {
-            throw new AppError("No categories found", 404);
-        }
+        
         return categories;
 }
 

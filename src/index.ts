@@ -59,7 +59,7 @@ app.use('/docs', express.static(path.join(__dirname, 'docs'), { index: 'index.ht
 app.get("/",async (req, res) => {
     const keywords = ['javascript', 'python','cv','resume builder']
     // const data = await googleTrendsData()
-    const data = await googleRelatedQueries(keywords)
+    const data = await googleRelatedQueries(keywords[0])
     res.json({
         "message": "Hello World",
         "data": data

@@ -23,11 +23,10 @@ export const enhanceProjectDescriptionPrompt = ChatPromptTemplate.fromMessages([
     ["user", "{input}"],
 ]);
 
-
 export const recommendCategoriesPrompt = ChatPromptTemplate.fromMessages([
     [
-      "system",
-      `You are a content strategy expert specializing in blog categorization. Based on the user's blog/project description, recommend 4-5 strategic content categories.
+        "system",
+        `You are a content strategy expert specializing in blog categorization. Based on the user's blog/project description, recommend 4-5 strategic content categories.
   
         Guidelines:
         1. Cover Core Content Areas: Include the main topics the blog will address.
@@ -44,34 +43,83 @@ export const recommendCategoriesPrompt = ChatPromptTemplate.fromMessages([
         - Indicate if the category is essential now for starting the blog using boolean field "isRequiredNow".
         
         Focus on practical, actionable categories that make sense for the blog's mission, audience, and content strategy.`
-        ],
-        ["user", "{input}"],
-  ]);
-  
-export const brainstormContentPrompt = ChatPromptTemplate.fromMessages([
+    ],
+    ["user", "{input}"],
+]);
+
+export const keywordsResearchPrompt = ChatPromptTemplate.fromMessages([
     [
         "system",
-        `You are an AI assistant that brainstorms blog content ideas for a project.
+        `You are an expert SEO keyword researcher specializing in blog content optimization.
 
-    Rules:
-    - Use the project description, existing categories, existing post titles, and user query.
-    - Categories can be existing or new depending on the need of project. If a category is essential and suggested by you, mark it as new.
-    - Each category must be short and concise, ideally 1-4(max if needed) words.
-    - For each category, suggest exactly 3 posts.
-    - For each post under a category, generate the following metadata:
-        - title: engaging and specific
-        - keywords: 5–10 relevant keywords/phrases
-        - description: 2–3 sentence summary of the post
-        - audience: who this post is for
-        - tone: formal, casual, friendly, educational, etc.
-        - length: short, medium, long (relative to typical blog length)
-    - Fill gaps in existing categories first, then optionally suggest 1–2 new categories if needed with posts.
-    - Do not repeat existing post titles.`
+        Your task is to generate 8-12 highly relevant keywords and search phrases for the given topic.
+
+        KEYWORD CATEGORIES:
+        • Primary Keywords (1-2 words): 5-10 main topic terms for Google Trends
+        • Long-tail Keywords (3-6 words): 5-8 specific phrases for content ideas, "how to", "what is", "best", "why" type queries, specific to the blog's geographic or niche focus
+
+        RESEARCH GUIDELINES:
+        • Focus on search terms people actually use on Google
+        • Consider seasonal trends and current events in the niche
+        • Include both informational and transactional search intent
+        • Prioritize keywords with good search volume and low competition
+        • Match the blog's target audience demographics and interests
+        • Include emerging trends and new technologies in the field
+
+        QUALITY CRITERIA:
+        • Must be directly related to the user's query if provided
+        • Should have clear search intent (informational, navigational, commercial)
+        • Avoid overly broad or generic terms
+        • Include location-specific terms if relevant
+        • Consider the blog's authority level and target audience
+        `
     ],
     [
         "user",
-        `Project description: {description}
-            Categories: {categoriesWithPosts}
-            User query: {query}`
+        `
+            BLOG CONTEXT:
+            {blog_overview}
+
+            TOPIC/QUERY:
+            {user_query}
+
+            Generate relevant keywords for this topic:`
     ]
+]);
+
+export const finalContentIdeasPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    `
+    You are an expert content strategist and SEO researcher specializing in blog content planning.
+
+    Your task is to generate post ideas based on the provided context.
+
+    GUIDELINES:
+    - Use the existing project categories if they are relevant
+    - Suggest new categories only if there is a clear gap
+    - Generate 5-10 post ideas
+    - Include insights from trends and related queries to prioritize topics
+    - Align with the blog's niche, audience, and the user query
+    - Focus on primary and long-tail keywords for content relevance
+    - Keep posts actionable, specific, and search-intent driven
+    - Consider seasonality and emerging trends where relevant
+    `
+  ],
+  [
+    "user",
+    `
+    PROJECT OVERVIEW:
+    {project_overview}
+
+    PRIMARY KEYWORDS & TRENDS:
+    {primary_keywords_trends}
+
+    LONG-TAIL KEYWORDS & RELATED QUERIES:
+    {longtail_keywords_trends}
+
+    USER QUERY:
+    {user_query}
+`
+  ]
 ]);

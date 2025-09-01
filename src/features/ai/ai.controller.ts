@@ -1,8 +1,12 @@
-import { Request, Response, text } from "express";
+import { Request, Response } from "express";
 import sendResponse from "../../utils/sendResponse";
 import AppError from "../../utils/appError";
 import expressAsyncHandler from "express-async-handler";
-import { brainstormContent, generateCategories, generateEnhancedDescription } from "./ai.service";
+import { brainstormContent, generateCategories, generateEnhancedDescription, generateKeywords } from "./ai.service";
+import { RequestWithUser } from "../../types/customRequest";
+import prisma from "../../lib/db";
+import { createSimpleContext } from "../../lib/ai/queryBuilder";
+import { googleRelatedQueries, googleTrendsData } from "../../lib/ai/tools";
 
 
 // Enhance project description
@@ -16,11 +20,11 @@ export const enhanceProjectDescription = expressAsyncHandler(async (req: Request
     if (!description) {
         throw new AppError("Description is required", 400);
     }
-    if(description?.trim()?.split(" ")?.length < 30) {
+    if (description?.trim()?.split(" ")?.length < 30) {
         throw new AppError("Description must be at least 30 words", 400);
     }
     const enhancedDescription = await generateEnhancedDescription(description);
-    sendResponse({res, data: { enhancedDescription }, message: "Project description enhanced successfully"})
+    sendResponse({ res, data: { enhancedDescription }, message: "Project description enhanced successfully" })
 })
 
 
@@ -35,11 +39,11 @@ export const generateCategoriesSuggestions = expressAsyncHandler(async (req: Req
     if (!description) {
         throw new AppError("Description is required", 400);
     }
-    if(description?.trim()?.split(" ")?.length < 30) {
+    if (description?.trim()?.split(" ")?.length < 30) {
         throw new AppError("Description is too short", 400);
     }
     const categories = await generateCategories(description);
-    sendResponse({res, data: categories , message: "Categories generated successfully"})
+    sendResponse({ res, data: categories, message: "Categories generated successfully" })
 })
 
 // Get content ideas
@@ -48,26 +52,61 @@ export const generateCategoriesSuggestions = expressAsyncHandler(async (req: Req
 // @description Get content ideas
 // @body {query: string}
 // @returns {contentIdeas: {category: string, ideas: string[], isExisting: boolean}[]}
-export const getContentIdeas = expressAsyncHandler(async (req: Request, res: Response) => {
-    const { query } = req.body;
-    if (!query) {
-        throw new AppError("Query is required", 400);
+export const getContentIdeas = expressAsyncHandler(async (req: RequestWithUser, res: Response) => {
+    const { query, projectId } = req.body;
+    if (!query || !projectId) {
+        throw new AppError("Query and projectId are required", 400);
     }
 
-    const desc = "wanderausguide.com australian travel blogs camping fishing hidden spots"
-    const categoriesWithPosts = [
-        {
-            name: "AI",
-            posts: ["Resume Builder", "Resume Builder", "Resume Builder", "Resume Builder", "Resume Builder"]
-        }
-    ]
-    const contentIdeas = await brainstormContent({
-        description: desc,
-        categoriesWithPosts:[],
-        query
+    // Get project description
+    const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { description: true }
     });
 
-    sendResponse({res, data: { contentIdeas }, message: "Content ideas generated successfully"})
+    if (!project) {
+        throw new AppError("Project not found", 404);
+    }
+
+    const categoriesWithPosts = await prisma.category.findMany({
+        where: { projectId },
+        include: {
+            posts: {
+                select: { title: true }
+            }
+        }
+    });
+
+    // Transform for AI
+    const formattedData = categoriesWithPosts.map(cat => ({
+        name: cat.name,
+        posts: cat.posts.map(post => post.title)
+    }));
+
+
+    const context = createSimpleContext(project.description as string, formattedData);
+
+    const keywords = await generateKeywords(context, query);
+
+
+    // Run all queries in parallel
+    const primaryKeywordsArray = await Promise.all(
+        keywords.primaryKeywords.map(keyword => googleTrendsData(keyword))
+    );
+
+    const longTailKeywordsArray = await Promise.all(
+        keywords.longTailKeywords.map(keyword => googleRelatedQueries(keyword))
+    );
+
+    const finalContentIdeas = await brainstormContent({
+        project_overview: context,
+        primary_keywords_trends: primaryKeywordsArray.join(", "),
+        longtail_keywords_trends: longTailKeywordsArray.join(", "),
+        user_query: query
+    });
+
+
+    sendResponse({ res, data: finalContentIdeas, message: "Content ideas generated successfully" })
 })
 
 
@@ -84,9 +123,8 @@ export const generateContent = expressAsyncHandler(async (req: Request, res: Res
     }
 
     const content = "Content";
-    sendResponse({res, data: { content }, message: "Content generated successfully"})
+    sendResponse({ res, data: { content }, message: "Content generated successfully" })
 })
-
 
 // Generate project tips
 // @route POST /api/v1/ai/generate-project-tips
@@ -105,5 +143,5 @@ export const generateProjectTips = expressAsyncHandler(async (req: Request, res:
         "Make sure to have a clear goal for your project"
     ]
 
-    sendResponse({res, data: { projectTips }, message: "Project tips generated successfully"})
+    sendResponse({ res, data: { projectTips }, message: "Project tips generated successfully" })
 })

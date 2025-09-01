@@ -1,13 +1,11 @@
-import { Request, Response, text } from "express";
+import { Request, Response } from "express";
 import sendResponse from "../../utils/sendResponse";
 import AppError from "../../utils/appError";
 import expressAsyncHandler from "express-async-handler";
 import { brainstormContent, generateCategories, generateEnhancedDescription, generateKeywords } from "./ai.service";
-import projectService from "../projects/projectService";
 import { RequestWithUser } from "../../types/customRequest";
-import categoryService from "../categories/categoryService";
 import prisma from "../../lib/db";
-import { createSimpleContext, summarizeRelatedQueries } from "../../lib/ai/queryBuilder";
+import { createSimpleContext } from "../../lib/ai/queryBuilder";
 import { googleRelatedQueries, googleTrendsData } from "../../lib/ai/tools";
 
 

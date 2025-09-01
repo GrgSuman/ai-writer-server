@@ -25,7 +25,6 @@ const getProjectsByUserId = async (userId: string) => {
         throw new AppError("No projects found", 404);
     }
 
-
     return projects
 }
 
@@ -40,7 +39,7 @@ const getSingleProjectByIdandUser = async (projectId: string, userId: string) =>
         include: {
             categorys: true,
             _count: {
-                select: { posts: true }
+                select: { posts: true, researchContentIdeas: true }
             }
         }
 

@@ -7,7 +7,6 @@ import AppError from "../../utils/appError";
 // It returns research content ideas for the project
 // @route GET /api/projects/:projectId/research-content-ideas
 const getResearchContentIdeas = async (projectId: string) => {
-    console.log(projectId)
     try {
         const researchContentIdeas = await prisma.researchContentIdeas.findMany({
             where: {
@@ -26,10 +25,21 @@ const getResearchContentIdeas = async (projectId: string) => {
 
 // Add research content ideas for a project
 // This function is used to add research content ideas for a project
-// It takes a projectId, title, keywords, description, wordCount, postFormat and whyGoodIdea as parameters and adds research content ideas for the project
+// It takes a projectId, title, description, keywords, audience, tone, length, searchIntent, suggestedCategory, and trendInsights as parameters and adds research content ideas for the project
 // It returns the added research content ideas
 // @route POST /api/projects/:projectId/research-content-ideas
-const addResearchContentIdeas = async (projectId: string, title: string, keywords: string, description: string, wordCount: number, postFormat: string, whyGoodIdea: string[]) => {
+const addResearchContentIdeas = async (
+    projectId: string, 
+    title: string, 
+    description: string, 
+    keywords: string[], 
+    audience: string, 
+    tone: string, 
+    length: string, 
+    searchIntent: string, 
+    suggestedCategory: string, 
+    trendInsights: string
+) => {
     try {
         // Check for duplicate title
         const existingIdea = await prisma.researchContentIdeas.findFirst({
@@ -47,11 +57,14 @@ const addResearchContentIdeas = async (projectId: string, title: string, keyword
             data: {
                 projectId,
                 title,
-                keywords,
                 description,
-                wordCount,
-                postFormat,
-                whyGoodIdea
+                keywords,
+                audience,
+                tone,
+                length,
+                searchIntent,
+                suggestedCategory,
+                trendInsights
             }
         });
         return researchContentIdeas;
@@ -65,14 +78,34 @@ const addResearchContentIdeas = async (projectId: string, title: string, keyword
 
 // Update research content ideas for a project
 // This function is used to update research content ideas for a project
-// It takes a researchContentIdeasId, title, keywords, description, wordCount, postFormat and whyGoodIdea as parameters and updates the research content ideas
+// It takes a researchContentIdeasId, title, description, keywords, audience, tone, length, searchIntent, suggestedCategory, and trendInsights as parameters and updates the research content ideas
 // It returns the updated research content ideas
 // @route PUT /api/projects/:projectId/research-content-ideas/:researchContentIdeasId
-
-const updateResearchContentIdeas = async (researchContentIdeasId: string, title: string, keywords: string, description: string, wordCount: number, postFormat: string, whyGoodIdea: string[]) => {
+const updateResearchContentIdeas = async (
+    researchContentIdeasId: string, 
+    title: string, 
+    description: string, 
+    keywords: string[], 
+    audience: string, 
+    tone: string, 
+    length: string, 
+    searchIntent: string, 
+    suggestedCategory: string, 
+    trendInsights: string
+) => {
     const researchContentIdeas = await prisma.researchContentIdeas.update({
         where: { id: researchContentIdeasId },
-        data: { title, keywords, description, wordCount, postFormat, whyGoodIdea }
+        data: { 
+            title, 
+            description, 
+            keywords, 
+            audience, 
+            tone, 
+            length, 
+            searchIntent, 
+            suggestedCategory, 
+            trendInsights 
+        }
     });
     if (!researchContentIdeas) {
         throw new AppError("Error updating research content ideas", 404);

@@ -38,8 +38,8 @@ export const finalContentIdeasSchema = z.object({
       tone: z.string().describe("Tone/style: formal, casual, friendly, educational, etc."),
       length: z.string().describe("Post length: short, medium, long"),
       searchIntent: z.string().describe("Primary search intent: informational, navigational, commercial"),
-      suggestedCategory: z.string().nullable().describe("Optional category suggestion, or null if no specific category"),
-      trendInsights: z.string().nullable().describe("Any relevant trend insights that influenced this post idea, or null if none")
+      suggestedCategory: z.string().describe("Optional category suggestion, or null if no specific category"),
+      trendInsights: z.string().describe("Any relevant trend insights that influenced this post idea, or null if none")
     })
   ).min(5).max(10).describe("5-10 content ideas total")
 });

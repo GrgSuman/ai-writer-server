@@ -110,3 +110,23 @@ export function summarizeKeywordTrends(keyword: string, trendData: TrendDataPoin
   return summary;
 }
 
+
+export const userBlogInfo = (title: string, description: string, keywords: string[], audience: string, tone: string, length: string, searchIntent?: string, trendInsights?: string) => {
+  let output = `
+  Title: ${title}
+  Description: ${description}
+  Keywords: ${keywords}
+  Audience: ${audience}
+  Tone: ${tone}
+  Length: ${length}
+`;
+
+  if (searchIntent) {
+    output += `  Search Intent: ${searchIntent}\n`;
+  }
+  if (trendInsights) {
+    output += `  Trend Insights: ${trendInsights}\n`;
+  }
+
+  return output;
+}

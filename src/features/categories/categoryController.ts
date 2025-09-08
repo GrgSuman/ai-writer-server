@@ -84,12 +84,10 @@ export const addMultipleCategoriesinProject =  expressAsyncHandler(async (req: R
     }
 
     for(const name of names){
-        if(name.length < 3){
-            throw new AppError("Category name must be at least 3 characters long", 400);
-        }
-        if(name.length > 20){
-            throw new AppError("Category name must be less than 20 characters long", 400);
-        }
+      //check in words length should be 5 words max
+      if(name.split(" ").length > 5){
+        throw new AppError("Category name must be less than 5 words", 400);
+      }
     }
     const categories = await categoryService.addMultipleCategoriesinProject(projectId, names);
     sendResponse({res, message: "Categories created successfully", data: categories});

@@ -1,17 +1,19 @@
-import { chatModel } from "../../lib/ai/models";
-import { emojiPrompt, enhanceProjectDescriptionPrompt, finalContentIdeasPrompt, keywordsResearchPrompt, recommendCategoriesPrompt } from "../../lib/ai/prompts";
-import { finalContentIdeasSchema, keywordsResearchSchema, recommendCategoriesSchema } from "../../lib/ai/schemas";
+import { AgentExecutor, createReactAgent } from "langchain/agents";
+import { blogWriterModel, chatModel } from "../../lib/ai/models";
+import { emojiPrompt, enhanceProjectDescriptionPrompt, finalContentIdeasPrompt, generateSEOBlogPostPrompt, keywordsResearchPrompt, recommendCategoriesPrompt } from "../../lib/ai/prompts";
+import { BlogPostSchema, finalContentIdeasSchema, keywordsResearchSchema, recommendCategoriesSchema } from "../../lib/ai/schemas";
+import { perplexitySearchTool } from "../../lib/ai/tools";
 import AppError from "../../utils/appError";
 
 // Get emoji based on text
 // @param text: string
 // @returns emoji: string
-export const getEmojiBasedOnText =async (text: string) => {
+export const getEmojiBasedOnText = async (text: string) => {
     if (!text) {
         throw new AppError("Text is required", 400);
     }
     const chain = emojiPrompt.pipe(chatModel)
-    const emoji = await chain.invoke({input: text})
+    const emoji = await chain.invoke({ input: text })
 
     return emoji.content.toString().trim()
 }
@@ -23,11 +25,11 @@ export const generateEnhancedDescription = async (description: string) => {
     if (!description) {
         throw new AppError("Description is required", 400);
     }
-    if(description?.trim()?.split(" ")?.length < 30) {
+    if (description?.trim()?.split(" ")?.length < 30) {
         throw new AppError("Description must be at least 10 words", 400);
     }
     const chain = enhanceProjectDescriptionPrompt.pipe(chatModel)
-    const enhancedDescription = await chain.invoke({input: description})
+    const enhancedDescription = await chain.invoke({ input: description })
     return enhancedDescription.content.toString().trim()
 }
 
@@ -39,7 +41,7 @@ export const generateCategories = async (description: string) => {
         throw new AppError("Description is required", 400);
     }
     const chain = recommendCategoriesPrompt.pipe(chatModel.withStructuredOutput(recommendCategoriesSchema))
-    const categories = await chain.invoke({input: description})
+    const categories = await chain.invoke({ input: description })
     return categories
 }
 
@@ -61,13 +63,52 @@ export const generateKeywords = async (context: string, query: string) => {
 // Brainstorm content
 // @param description: string
 // @returns brainstormContent: {category: string, isExisting: boolean, posts: {title: string, keywords: string[], description: string, audience: string, tone: string, length: string}[]}
-export const brainstormContent = async ({project_overview, primary_keywords_trends, longtail_keywords_trends, user_query}:{project_overview: string, primary_keywords_trends: string, longtail_keywords_trends: string, user_query: string}) => {
+export const brainstormContent = async ({ project_overview, primary_keywords_trends, longtail_keywords_trends, user_query }: { project_overview: string, primary_keywords_trends: string, longtail_keywords_trends: string, user_query: string }) => {
     const chain = finalContentIdeasPrompt.pipe(chatModel.withStructuredOutput(finalContentIdeasSchema))
     const brainstormContent = await chain.invoke({
-       project_overview,
-       primary_keywords_trends,
-       longtail_keywords_trends,
-       user_query
+        project_overview,
+        primary_keywords_trends,
+        longtail_keywords_trends,
+        user_query
     })
     return brainstormContent
+}
+
+// Generate content
+// @param query: string
+// @returns content: {content: string}
+export const generateContentService = async (content: string) => {
+
+    try {
+        const tools = [perplexitySearchTool];
+
+        const agent = await createReactAgent({
+            llm: blogWriterModel,
+            tools: tools,
+            prompt: generateSEOBlogPostPrompt,
+        });
+
+        const agentExecutor = new AgentExecutor({
+            agent,
+            tools: [perplexitySearchTool],
+        });
+
+        const result = await agentExecutor.invoke({
+            input: content,
+            maxSteps: 10,
+            verbose: true,
+        });
+
+        // Then parse it with structured output
+        const structuredLLM = blogWriterModel.withStructuredOutput(BlogPostSchema);
+        const structuredResult = await structuredLLM.invoke([
+            { role: "user", content: `Parse this blog post into structured format: ${result.output}` }
+        ]);
+
+        return structuredResult
+    } catch (error) {
+        console.log(error);
+        throw new AppError("Error generating content", 400);
+    }
+
 }

@@ -27,7 +27,7 @@ export interface CreatePostInterface {
 // @route GET /api/projects/:projectId/posts
 const getAllPosts = async (projectId: string) => {
     const posts = await prisma.post.findMany({
-            where: { projectId, isDraft: false },
+            where: { projectId },
             include: {
             category: true,
             project: true

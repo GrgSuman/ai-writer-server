@@ -10,7 +10,7 @@ export const recommendCategoriesSchema = z.object({
         .describe("Whether this category is essential to start the blog immediately"),
     })
   ).min(4).max(5)
-   .describe("4-5 categories for the blog"),
+    .describe("4-5 categories for the blog"),
 });
 
 
@@ -42,4 +42,13 @@ export const finalContentIdeasSchema = z.object({
       trendInsights: z.string().describe("Any relevant trend insights that influenced this post idea, or null if none")
     })
   ).min(5).max(10).describe("5-10 content ideas total")
+});
+
+
+export const BlogPostSchema = z.object({
+  title: z.string().describe("SEO-optimized blog post title"),
+  content: z.string().describe("Full blog post content in html format"),
+  metaDescription: z.string().describe("Meta description for SEO"),
+  keywords: z.array(z.string()).describe("Relevant tags/keywords"),
+  thubmnailImagePrompt: z.string().describe("Prompt for generating thumbnail image"),
 });

@@ -9,25 +9,25 @@ import AppError from "../../utils/appError";
 // It returns all categories in the project
 // @route GET /api/projects/:projectId/categories
 const getAllCategoriesinProject = async (projectId: string) => {
-        // First validate that the project exists
-        const projectExists = await prisma.project.findUnique({
-            where: { id: projectId, isActive: true }
-        });
-        
-        if (!projectExists) {
-            throw new AppError("Project not found", 404);
-        }
+    // First validate that the project exists
+    const projectExists = await prisma.project.findUnique({
+        where: { id: projectId, isActive: true }
+    });
 
-        const categories = await prisma.category.findMany({
-             where: { projectId },
-             include: {
-                _count: {
-                    select: { posts: true }
-                }
-             }
-        });
-        
-        return categories;
+    if (!projectExists) {
+        throw new AppError("Project not found", 404);
+    }
+
+    const categories = await prisma.category.findMany({
+        where: { projectId },
+        include: {
+            _count: {
+                select: { posts: true }
+            }
+        }
+    });
+
+    return categories;
 }
 
 // Get a single category in a project by categoryId
@@ -35,17 +35,17 @@ const getAllCategoriesinProject = async (projectId: string) => {
 // It takes a categoryId as a parameter and returns a single category in the project
 // It returns a single category in the project
 // @route GET /api/projects/:projectId/categories/:categoryId
-const getSingleCategoryinProject = async ( categoryId: string) => {
-        const category = await prisma.category.findUnique({
-            where: { id: categoryId },
-            include: {
-                posts: true
-            }
-        });
-        if (!category) {
-            throw new AppError("Category not found", 404);
+const getSingleCategoryinProject = async (categoryId: string) => {
+    const category = await prisma.category.findUnique({
+        where: { id: categoryId },
+        include: {
+            posts: true
         }
-        return category;
+    });
+    if (!category) {
+        throw new AppError("Category not found", 404);
+    }
+    return category;
 }
 
 // Get a single category in a project by slug
@@ -53,7 +53,7 @@ const getSingleCategoryinProject = async ( categoryId: string) => {
 // It takes a categorySlug as a parameter and returns a single category in the project
 // It returns a single category in the project
 // @route GET /api/projects/:projectId/categories/slug/:categorySlug
-const getSingleCategoryinProjectBySlug = async ( categorySlug: string) => {
+const getSingleCategoryinProjectBySlug = async (categorySlug: string) => {
     const category = await prisma.category.findFirst({
         where: { slug: categorySlug },
         include: {
@@ -72,18 +72,41 @@ const getSingleCategoryinProjectBySlug = async ( categorySlug: string) => {
 // It returns the added category
 // @route POST /api/projects/:projectId/categories
 const addNewCategoryinProject = async (projectId: string, name: string) => {
-    try{
-        const category = await prisma.category.create({ data: { projectId, name, slug: slugify(name) } });  
+    console.log("Adding new category in project", projectId, name);
+    try {
+
+        //check if the category already exists ignoring the case
+        const categoryExists = await prisma.category.findFirst({
+            where: {
+              projectId,
+              name: {
+                equals: name,
+                mode: "insensitive",
+              },
+            },
+          });
+          
+        if (categoryExists) {
+            throw new AppError("Category with this name already exists", 400);
+        }
+
+        const category = await prisma.category.create({ data: { projectId, name, slug: slugify(name) } });
         if (!category) {
+            console.log("Failed to add category", projectId, name);
             throw new AppError("Failed to add category", 400);
         }
         return category;
-    }catch(error){
-        if(error instanceof Prisma.PrismaClientKnownRequestError){
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 throw new AppError("Category with this name already exists", 400);
             }
         }
+        console.log("Failed to add category", error
+
+
+            
+        );
         throw new AppError("Failed to add category", 400);
     }
 }
@@ -95,14 +118,14 @@ const addNewCategoryinProject = async (projectId: string, name: string) => {
 // It returns the added category
 // @route POST /api/projects/:projectId/categories/multiple
 const addMultipleCategoriesinProject = async (projectId: string, names: string[]) => {
-    try{
+    try {
         const categories = await prisma.category.createMany({ data: names.map(name => ({ projectId, name, slug: slugify(name) })) });
         if (!categories) {
             throw new AppError("Failed to add categories", 400);
         }
         return categories;
-    }catch(error){
-        if(error instanceof Prisma.PrismaClientKnownRequestError){
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 throw new AppError("Category with this name already exists", 400);
             }
@@ -117,20 +140,20 @@ const addMultipleCategoriesinProject = async (projectId: string, names: string[]
 // It returns the updated category
 // @route PUT /api/projects/:projectId/categories/:categoryId
 const updateCategoryinProject = async (categoryId: string, name: string) => {
-    try{
+    try {
         const category = await prisma.category.update({ where: { id: categoryId }, data: { name, slug: slugify(name) } });
         if (!category) {
             throw new AppError("Failed to update category", 400);
         }
         return category;
-    }catch(error){
-        if(error instanceof Prisma.PrismaClientKnownRequestError){
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 throw new AppError("Category with this name already exists", 400);
             }
         }
         throw new AppError("Failed to update category", 400);
-    }           
+    }
 }
 
 // Delete a category in a project
@@ -138,7 +161,7 @@ const updateCategoryinProject = async (categoryId: string, name: string) => {
 // It takes a categoryId as a parameter and deletes the category
 // It returns the deleted category
 // @route DELETE /api/projects/:projectId/categories/:categoryId
-const deleteCategoryinProject = async ( categoryId: string) => {
+const deleteCategoryinProject = async (categoryId: string) => {
     const category = await prisma.category.delete({ where: { id: categoryId } });
     if (!category) {
         throw new AppError("Failed to delete category", 400);

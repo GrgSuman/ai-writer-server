@@ -34,6 +34,7 @@ CREATE TABLE "Project" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
+    "emoji" TEXT,
 
     CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
 );
@@ -74,13 +75,16 @@ CREATE TABLE "ResearchContentIdeas" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "keywords" TEXT NOT NULL,
-    "wordCount" INTEGER NOT NULL,
-    "postFormat" TEXT NOT NULL,
-    "whyGoodIdea" TEXT[],
     "projectId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "audience" TEXT NOT NULL,
+    "length" TEXT NOT NULL,
+    "searchIntent" TEXT NOT NULL,
+    "suggestedCategory" TEXT NOT NULL,
+    "tone" TEXT NOT NULL,
+    "trendInsights" TEXT NOT NULL,
+    "keywords" TEXT[],
 
     CONSTRAINT "ResearchContentIdeas_pkey" PRIMARY KEY ("id")
 );

@@ -2,11 +2,15 @@ import { Request, Response } from "express";
 import sendResponse from "../../utils/sendResponse";
 import AppError from "../../utils/appError";
 import expressAsyncHandler from "express-async-handler";
-import { brainstormContent, generateCategories, generateEnhancedDescription, generateKeywords } from "./ai.service";
+import { brainstormContent, generateCategories, generateContentService, generateEnhancedDescription, generateKeywords } from "./ai.service";
 import { RequestWithUser } from "../../types/customRequest";
 import prisma from "../../lib/db";
-import { createSimpleContext } from "../../lib/ai/queryBuilder";
+import { createSimpleContext, userBlogInfo } from "../../lib/ai/queryBuilder";
 import { googleRelatedQueries, googleTrendsData } from "../../lib/ai/tools";
+import postService, { CreatePostInterface } from "../posts/postService";
+import { slugify } from "../../lib/slugify";
+import categoryService from "../categories/categoryService";
+import researchService from "../research/researchService";
 
 
 // Enhance project description
@@ -117,14 +121,44 @@ export const getContentIdeas = expressAsyncHandler(async (req: RequestWithUser, 
 // @body {query: string}
 // @returns {content: string}
 export const generateContent = expressAsyncHandler(async (req: Request, res: Response) => {
-    const { query } = req.body;
-    if (!query) {
-        throw new AppError("Query is required", 400);
+    const { title, description, keywords, audience, tone, id,
+         length, searchIntent, trendInsights, category, isNewCategory, projectId } = req.body;
+
+    if (!title || !description || !keywords || !audience || !tone || !length) {
+        throw new AppError("All fields are required to generate content", 400);
     }
 
-    const content = "Content";
-    sendResponse({ res, data: { content }, message: "Content generated successfully" })
-})
+    const content = userBlogInfo(title, description, keywords, audience, tone, length, searchIntent, trendInsights);
+
+    const structuredResult = await generateContentService(content);
+
+    let newCategoryId = category;
+    if (isNewCategory) {
+        const newCategory = await categoryService.addNewCategoryinProject(projectId, category);
+        newCategoryId = newCategory.id;
+    }
+
+    const postData: CreatePostInterface = {
+        title: title,
+        slug: slugify(title),
+        description: description,
+        keywords: keywords.join(", "),
+        content: structuredResult.content,
+        categoryId: newCategoryId,
+        projectId: projectId,
+    }
+
+    const post = await postService.addNewPost(postData);
+    if(id){
+        await researchService.deleteResearchContentIdeas(id);
+    }
+
+    sendResponse({
+        res,
+        data: post,
+        message: "Content generated successfully"
+    });
+});
 
 // Generate project tips
 // @route POST /api/v1/ai/generate-project-tips

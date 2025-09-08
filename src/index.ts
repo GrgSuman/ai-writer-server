@@ -57,12 +57,8 @@ app.use("/api/v1/ai", aiRoutes);
 app.use('/docs', express.static(path.join(__dirname, 'docs'), { index: 'index.html' }));
 
 app.get("/",async (req, res) => {
-    const keywords = ['javascript', 'python','cv','resume builder']
-    // const data = await googleTrendsData()
-    const data = await googleRelatedQueries(keywords[0])
     res.json({
-        "message": "Hello World",
-        "data": data
+        "message": "Hello World! Welcome to WriteCMS API",
     });
 })
 

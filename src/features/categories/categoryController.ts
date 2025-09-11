@@ -3,6 +3,7 @@ import expressAsyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import sendResponse from "../../utils/sendResponse";
 import AppError from "../../utils/appError";
+import { RequestWithUser } from "../../types/customRequest";
 /**
  * @route GET /api/projects/:projectId/categories
  * @desc Get all categories in a project including posts under the category
@@ -19,10 +20,10 @@ export const getAllCategoriesinProject =  expressAsyncHandler(async (req: Reques
  * @desc Get a single category in a project including posts under the category
  * @access Private
  */
-export const getSingleCategoryinProject =  expressAsyncHandler(async (req: Request, res: Response) => {
+export const getSingleCategoryinProject =  expressAsyncHandler(async (req: RequestWithUser, res: Response) => {
     const { categoryId } = req.params;
 
-    const category = await categoryService.getSingleCategoryinProject(categoryId);
+    const category = await categoryService.getSingleCategoryinProject(categoryId, req.apiKey);
     if (!category) {
         throw new AppError("Category not found", 404);
     }
@@ -35,10 +36,10 @@ export const getSingleCategoryinProject =  expressAsyncHandler(async (req: Reque
  * @desc Get a single category in a project by slug is easy in SEO for frontend
  * @access Private
  */
-export const getSingleCategoryinProjectBySlug =  expressAsyncHandler(async (req: Request, res: Response) => {
+export const getSingleCategoryinProjectBySlug =  expressAsyncHandler(async (req: RequestWithUser, res: Response) => {
     const { categorySlug } = req.params;
 
-    const category = await categoryService.getSingleCategoryinProjectBySlug(categorySlug);
+    const category = await categoryService.getSingleCategoryinProjectBySlug(categorySlug, req.apiKey);
     if (!category) {
         throw new AppError("Category not found", 404);
     }

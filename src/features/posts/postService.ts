@@ -1,6 +1,5 @@
 import prisma from "../../lib/db";
 import { Prisma } from "@prisma/client";
-import formatDateTime from "../../lib/formatDateTime";
 import AppError from "../../utils/appError";
 
 export interface CreatePostInterface {
@@ -18,24 +17,27 @@ export interface CreatePostInterface {
     projectId: string;
     createdAt?: Date;
     updatedAt?: Date;
-  }
+}
 
 // Get all posts in a project including category and project
 // This function is used to get all posts in a project including category and project
 // It takes a projectId as a parameter and returns all posts in the project
 // It returns all posts in the project
 // @route GET /api/projects/:projectId/posts
-const getAllPosts = async (projectId: string) => {
+const getAllPosts = async (projectId: string, apiKey?: boolean) => {
+    let where: Prisma.PostWhereInput = { projectId };
+    if (apiKey) where.isDraft = false;
     const posts = await prisma.post.findMany({
-            where: { projectId },
-            include: {
+        where,
+        include: {
             category: true,
             project: true
-            },
-            orderBy:{
-                updatedAt: 'desc'
-            }
+        },
+        orderBy: {
+            updatedAt: 'desc'
+        }
     });
+
     if (!posts) {
         throw new AppError("No posts found", 404);
     }
@@ -47,16 +49,21 @@ const getAllPosts = async (projectId: string) => {
 // It takes a postId as a parameter and returns a single post in the project
 // It returns a single post in the project
 // @route GET /api/projects/:projectId/posts/:postId
-const getSinglePost = async (postId: string) => {
+const getSinglePost = async (postId: string, apiKey?: boolean) => {
+    const where: Prisma.PostWhereUniqueInput = { id: postId };
+    if (apiKey) {
+        where.isDraft = false;
+    }
     const post = await prisma.post.findUnique({
-         where: { id: postId },
+        where: where,
         include: {
-             category: true,
-              project: true
-        }});
+            category: true,
+            project: true
+        }
+    });
     if (!post) {
         throw new AppError("No post found", 404);
-    }   
+    }
     return post;
 }
 
@@ -67,15 +74,16 @@ const getSinglePost = async (postId: string) => {
 // @route GET /api/projects/:projectId/posts/slug/:postSlug
 const getSinglePostBySlug = async (postSlug: string) => {
     const post = await prisma.post.findFirst({
-         where: { slug: postSlug },
+        where: { slug: postSlug },
         include: {
-             category: true,
-              project: true
-        }});
+            category: true,
+            project: true
+        }
+    });
 
     if (!post) {
         throw new AppError("No post found", 404);
-    }   
+    }
     return post;
 }
 
@@ -89,7 +97,7 @@ const addNewPost = async (data: CreatePostInterface) => {
         const newPost = await prisma.post.create({ data });
         return newPost;
     } catch (error) {
-        if(error instanceof Prisma.PrismaClientKnownRequestError){
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 throw new AppError("Post with this slug/title already exists", 400);
             }
@@ -108,22 +116,22 @@ const updatePost = async (id: string, post: CreatePostInterface) => {
         const updatedPost = await prisma.post.update({ where: { id }, data: post });
         return updatedPost;
     } catch (error) {
-        if(error instanceof Prisma.PrismaClientKnownRequestError){
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 throw new AppError("Post with this slug/title already exists", 400);
             }
-        }   
+        }
         console.log(error)
         throw new AppError("Error updating post", 400);
     }
-}   
+}
 
 // Delete a post in a project
 // This function is used to delete a post in a project
 // It takes a postId as a parameter and deletes the post in the project
 // It returns the deleted post
 // @route DELETE /api/projects/:projectId/posts/:postId
-const deletePost = async ( id: string) => {
+const deletePost = async (id: string) => {
     const deletedPost = await prisma.post.delete({ where: { id } });
     if (!deletedPost) {
         throw new AppError("Post not found", 404);

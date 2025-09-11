@@ -36,6 +36,7 @@ export const verifyUser = expressAsyncHandler(async (req: RequestWithUser, res: 
         }
         // At this point, the API key is valid  now
         req.userId = apikey.userId;
+        req.apiKey = true;
         return next();
     }
 

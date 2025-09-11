@@ -8,4 +8,5 @@ export interface CustomRequest extends Request {
 
 export interface RequestWithUser extends Request {
     userId?: string;
+    apiKey?: boolean;
 }

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import postService, { CreatePostInterface } from "./postService";
 import expressAsyncHandler from "express-async-handler";
 import categoryService from "../categories/categoryService";
-import { CustomRequest } from "../../types/customRequest";
+import { CustomRequest, RequestWithUser } from "../../types/customRequest";
 import sendResponse from "../../utils/sendResponse";
 import AppError from "../../utils/appError";
 /**
@@ -10,9 +10,9 @@ import AppError from "../../utils/appError";
  * @desc Get all posts in a project including category and project
  * @access Public
  */
-export const getAllPosts = expressAsyncHandler(async (req: Request, res: Response) => {
+export const getAllPosts = expressAsyncHandler(async (req: RequestWithUser, res: Response) => {
     const { projectId } = req.params;
-    const posts = await postService.getAllPosts(projectId);
+    const posts = await postService.getAllPosts(projectId, req.apiKey);
     sendResponse({res, data: posts});
 })
 

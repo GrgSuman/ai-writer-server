@@ -35,11 +35,13 @@ const getAllCategoriesinProject = async (projectId: string) => {
 // It takes a categoryId as a parameter and returns a single category in the project
 // It returns a single category in the project
 // @route GET /api/projects/:projectId/categories/:categoryId
-const getSingleCategoryinProject = async (categoryId: string) => {
+const getSingleCategoryinProject = async (categoryId: string, apiKey?: boolean) => {
     const category = await prisma.category.findUnique({
         where: { id: categoryId },
         include: {
-            posts: true
+            posts: {
+                where: apiKey ? {} : { isDraft: false },
+            }
         }
     });
     if (!category) {
@@ -53,11 +55,13 @@ const getSingleCategoryinProject = async (categoryId: string) => {
 // It takes a categorySlug as a parameter and returns a single category in the project
 // It returns a single category in the project
 // @route GET /api/projects/:projectId/categories/slug/:categorySlug
-const getSingleCategoryinProjectBySlug = async (categorySlug: string) => {
+const getSingleCategoryinProjectBySlug = async (categorySlug: string, apiKey?: boolean) => {
     const category = await prisma.category.findFirst({
         where: { slug: categorySlug },
         include: {
-            posts: true
+            posts: {
+                where: apiKey ? {} : { isDraft: false },
+            }
         }
     });
     if (!category) {
@@ -72,7 +76,6 @@ const getSingleCategoryinProjectBySlug = async (categorySlug: string) => {
 // It returns the added category
 // @route POST /api/projects/:projectId/categories
 const addNewCategoryinProject = async (projectId: string, name: string) => {
-    console.log("Adding new category in project", projectId, name);
     try {
 
         //check if the category already exists ignoring the case
